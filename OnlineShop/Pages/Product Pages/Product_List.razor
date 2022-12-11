@@ -1,0 +1,223 @@
+﻿@page "/Products"
+@using Microsoft.Extensions.Localization
+@using OnlineShop.CustomResponses
+@using OnlineShop.Model
+@using OnlineShop.Services.Contracts
+@using System.Drawing
+@using System.Reflection
+
+@inject IProductService _prodService;
+@inject IJSRuntime js;
+@inject NavigationManager _navManager;
+
+
+@if(productList != null)
+{
+<h3>Products Page</h3>
+
+    <SfGrid TValue="Product" DataSource="productList"
+        EnableHeaderFocus="true" 
+        AllowFiltering=true AllowResizing=true AllowPaging=true AllowSorting=true
+        Height="500" Width="100%"
+        Toolbar="@(new string[]{"Search"})"
+        >
+        <GridEvents CommandClicked="OnCommandClicked" OnActionComplete="OnActionComplete" TValue="Product"></GridEvents>
+        <GridEditSettings 
+            AllowAdding=true AllowDeleting=true 
+            AllowEditing=true AllowEditOnDblClick=true 
+            ShowDeleteConfirmDialog="true" Mode="EditMode.Normal"/>
+        
+        <GridColumns>
+            <GridColumn Field="@nameof(Product.ProductID)" IsPrimaryKey=true AllowAdding=false AllowEditing=false Width="100" IsIdentity=true Visible=false/>
+            <GridColumn Field="@nameof(Product.ThumbNailPhoto)" HeaderText="Image" AutoFit=true TextAlign="TextAlign.Left" AllowEditing=false>
+                <Template>
+                    @{
+                        var prod = context as Product;
+                        byte[] bytes = prod.ThumbNailPhoto;
+                        string base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
+                        var imgSrource = $"data:image/png;base64,{base64String}";
+                                <div class="photo">
+                                    <img src=@imgSrource/>
+                                </div>
+                    }
+                </Template>   
+            </GridColumn>
+            <GridColumn Field="@nameof(Product.Name)" HeaderText="Name" AutoFit=true TextAlign="TextAlign.Left"/>
+            <GridColumn Field="@nameof(Product.ProductNumber)" HeaderText="Number" Width="230" TextAlign="TextAlign.Left"/>
+            <GridColumn Field="@nameof(Product.ListPrice)" HeaderText="Price" Format="C2" Width="150" TextAlign="TextAlign.Left"/>
+            <GridColumn Field="@nameof(Product.Color)" HeaderText="Color" Width="150" TextAlign="TextAlign.Left">
+                <EditTemplate>
+                    @{
+                        var prod = context as Product;
+                                <div class="container" style="color:@prod.Color">
+                                    <SfDropDownList DataSource="@ColorList" TItem="Colors" TValue="string" @bind-Value="@prod.Color">
+                                        <DropDownListFieldSettings 
+                                            Value="ColorName">
+                                        </DropDownListFieldSettings>
+                                    </SfDropDownList>
+                                </div>
+                    }
+                </EditTemplate>
+                
+                @*<Template>
+                    @{
+                        var prod = (context as Product);
+                        <div style="color:@prod.Color">
+                            @prod.Color
+                        </div>  
+                    }  
+                </Template>*@
+            </GridColumn>
+            <GridColumn Field="@nameof(Product.ModifiedDate)" HeaderText="Modified" Format="d" Width="150" TextAlign="TextAlign.Left"/>
+            <GridColumn Field="@nameof(Product.Size)" HeaderText="Size" AutoFit=true TextAlign="TextAlign.Left"/>
+            <GridForeignColumn Field="@nameof(Product.ProductCategoryID)" HeaderText="Category"
+                                           ForeignDataSource="@productCategoryList"
+                                           ForeignKeyValue="Name"
+                                           ForeignKeyField="ProductCategoryID"
+                                           AutoFit=true>
+            </GridForeignColumn>
+            <GridForeignColumn Field="@nameof(Product.ProductModelID)" HeaderText="Model"
+                                           ForeignDataSource="@productModelList"
+                                           ForeignKeyValue="Name"
+                                           ForeignKeyField="ProductModelID"
+                                           AutoFit=true>
+            </GridForeignColumn>
+            
+            <GridColumn HeaderText="Record Actions" Width="150">
+            <GridCommandColumns>
+                <GridColumn HeaderText="Details" AllowSorting=false AllowFiltering=false 
+                Width="80" TextAlign="TextAlign.Center"
+                AllowEditing=false AllowAdding=false AllowSearching=false>
+                    <Template>
+                        @{
+                            var prod = (context as Product);
+
+                                    <SfButton Content="" OnClick="@((args) => ShowProdInfo_Click(args, prod))" IconCss="e-icons e-eye" CssClass="btn e-info"></SfButton>
+                        }
+                    </Template>
+                </GridColumn>
+                <GridCommandColumn Type="CommandButtonType.Edit" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-edit", CssClass = "btn e-warning" })"></GridCommandColumn>
+                <GridCommandColumn Type="CommandButtonType.Delete" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-delete", CssClass = "btn e-danger" })"></GridCommandColumn>
+                <GridCommandColumn Type="CommandButtonType.Save" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-update", CssClass = "btn e-success" })"></GridCommandColumn>
+                <GridCommandColumn Type="CommandButtonType.Cancel" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-cancel-icon", CssClass = "btn" })"></GridCommandColumn>
+            </GridCommandColumns>
+         </GridColumn>
+        </GridColumns>
+               
+    </SfGrid>
+}
+else
+{
+    <SfSpinner @bind-Visible="@ShowSpinner" Type="@SpinnerType.Bootstrap">
+        Please Wait ...    
+    </SfSpinner>
+}
+
+@code {
+    public List<Product> productList { get; set; }
+    public List<ProductCategory> productCategoryList { get; set; }
+    public List<ProductModel> productModelList { get; set; }
+    public ProductResponse prodResponse { get; set; }
+    public ProductCategoryResponse productCategoryResponse { get; set; }
+    public ProductModelResponse productModelResponse { get; set; }
+
+    public Product selectedProduct { get; set; }
+
+    public List<Colors> ColorList { get; set; }
+
+    public bool ShowSpinner { get; set; } = true;
+
+    protected override async void OnInitialized()
+    {
+        base.OnInitialized();
+        await GetProducts();
+        await GetProductCategories();
+        await GetProductModels();
+
+        ColorList = GetAllColors();
+    }
+
+    private async Task GetProducts()
+    {
+        prodResponse = await _prodService.Take(5);
+        if(prodResponse.Status)
+        {
+            productList = prodResponse.Products;
+            StateHasChanged();
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", prodResponse.Message);
+        }
+    }
+
+    private async Task GetProductCategories()
+    {
+        productCategoryResponse = await _prodService.GetCategories();
+        if(productCategoryResponse.Status)
+        {
+            productCategoryList = productCategoryResponse.ProductCategories;
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", productCategoryResponse.Message);
+        }
+    }
+
+    private async Task GetProductModels()
+    {
+        productModelResponse = await _prodService.GetModels();
+        if(productModelResponse.Status)
+        {
+            productModelList = productModelResponse.ProductModels;
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", productModelResponse.Message);
+        }
+    }
+
+    public async void ShowProdInfo_Click(MouseEventArgs args, Product prod)
+    {
+        if(prod != null )
+        {
+            _navManager.NavigateTo($"/Product/Info/{prod.ProductID}");
+        }
+    }
+
+    private List<Colors> GetAllColors()
+    {
+        List<Colors> allColors = new List<Colors>();
+        Type colorType = typeof(System.Drawing.Color);
+        PropertyInfo[] propInfos = colorType.GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public);
+        foreach (PropertyInfo propInfo in propInfos) 
+        {
+
+            allColors.Add(new Colors{ColorName = propInfo.Name });
+        }
+
+        return allColors;
+    }
+    public class Colors
+    {
+        public string ColorName { get; set; }
+    }
+
+    private void OnCommandClicked(CommandClickEventArgs<Product> args) => selectedProduct = args.RowData;
+
+    public async void OnActionComplete(ActionEventArgs<Product> arg)
+    {
+        //Handles save operation
+        if (arg.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            prodResponse = await _prodService.Update(arg.Data);
+            await js.InvokeVoidAsync("alert", prodResponse.Message);
+        }
+        //Handles delete operation
+        if (arg.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            prodResponse = await _prodService.Remove(arg.Data.ProductID);
+            await js.InvokeVoidAsync("alert", prodResponse.Message);
+        }
+    }
+}

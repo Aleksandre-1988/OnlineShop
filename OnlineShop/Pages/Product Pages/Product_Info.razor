@@ -1,0 +1,19 @@
+﻿@page "/Product/Info/{id:int}"
+
+<h3>Product_Info</h3>
+
+@if(id != 0)
+{
+    @id
+}
+else
+{
+    <p>Loading ...  Please Wait</p>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+
+}
