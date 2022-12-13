@@ -21,7 +21,7 @@ namespace OnlineShop.API.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var prodModelList = _unit.productModelRep.GetAll().ToList();
+            List<ProductModel> prodModelList = _unit.productModelRep.GetAll().ToList();
 
             if (prodModelList != null)
             {

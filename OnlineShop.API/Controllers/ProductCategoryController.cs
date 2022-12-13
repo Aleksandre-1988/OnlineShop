@@ -17,11 +17,11 @@ namespace OnlineShop.API.Controllers
             this._unit = unit;
         }
 
-        // GET: api/<ProductCategory>
-        [HttpGet]
+        // GET: api/<ProductCategory>/GetAll
+        [HttpGet("GetAll")]
         public IActionResult GetAll()
         {
-            var prodCategoryList = _unit.productCategoryRep.GetAll().ToList();
+            var prodCategoryList = _unit.productCategoryRep.GetAll();
 
             if (prodCategoryList != null)
             {
@@ -49,8 +49,8 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // POST api/<ProductCategory>
-        [HttpPost]
+        // POST api/<ProductCategory>/Add
+        [HttpPost("Add")]
         public IActionResult Add([FromBody] ProductCategory productCategoryToAdd)
         {
             if (productCategoryToAdd == null)

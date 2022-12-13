@@ -1,0 +1,34 @@
+﻿@page "/Products"
+@using OnlineShop.Pages.Product_Pages
+@using Syncfusion.Blazor.Navigations
+
+<div class="container-fluid">
+    <SfTab Width="100%" Height="auto">
+        <TabItems>
+            <TabItem>
+                <ChildContent>
+                    
+                    <TabHeader Text="Product List"></TabHeader>
+                </ChildContent>
+                <ContentTemplate>
+                    <Product_List />
+                </ContentTemplate>
+            </TabItem>
+            <TabItem>
+                <ChildContent>
+
+                    <TabHeader Text="Product Category"></TabHeader>
+                </ChildContent>
+                <ContentTemplate>
+                    <Product_Category />
+
+                </ContentTemplate>
+            </TabItem>
+        </TabItems>
+    </SfTab>
+</div>
+
+
+@code {
+
+}

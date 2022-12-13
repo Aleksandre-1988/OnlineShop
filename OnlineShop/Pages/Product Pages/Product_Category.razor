@@ -1,0 +1,89 @@
+﻿@page "/test"
+@using OnlineShop.Model
+@using OnlineShop.Services.Contracts
+
+@inject IProductCategoryService _catService;
+@inject IJSRuntime js;
+
+@if (Categories != null)
+{
+    <h3>Product Category List</h3>
+
+    <SfGrid TValue="ProductCategory" DataSource="Categories" 
+        EnableHeaderFocus="true"
+        AllowFiltering=true AllowResizing=true AllowPaging=true AllowSorting=true
+        Height="500" Width="100%"
+        Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Update", "Cancel" })">
+        <GridEvents OnActionBegin="OnActionBegin" OnActionComplete="OnActionComplete" TValue="ProductCategory"></GridEvents>
+        <GridEditSettings AllowAdding="true" AllowEditing="true" AllowDeleting="true" Mode="EditMode.Dialog"></GridEditSettings>
+        <GridColumns>
+            <GridColumn Field="@nameof(ProductCategory.ProductCategoryID)" IsPrimaryKey=true AllowAdding=false AllowEditing=false Width="100" IsIdentity=true Visible=false />
+            <GridColumn Field="@nameof(ProductCategory.Name)" HeaderText="Name" AutoFit=true TextAlign="TextAlign.Left" />
+            <GridColumn Field="@nameof(ProductCategory.ModifiedDate)" HeaderText="Modified" Format="d" Width="150" AllowEditing=false AllowAdding=false TextAlign="TextAlign.Left" />
+            <GridForeignColumn Field="@nameof(ProductCategory.ParentProductCategoryID)" HeaderText="Parent Category"
+                           ForeignDataSource="@Categories"
+                           ForeignKeyValue="Name"
+                           ForeignKeyField="ProductCategoryID"
+                           AutoFit=true>
+            </GridForeignColumn>
+        </GridColumns>
+    </SfGrid>
+}
+else
+{
+    <SfSpinner @bind-Visible="@ShowSpinner" Type="@SpinnerType.Bootstrap">
+        Please Wait ...
+    </SfSpinner>
+}
+@code {
+    public List<ProductCategory> Categories { get; set; }
+    public List<ProductCategory> ParentCategories { get; set; }
+    public bool ShowSpinner { get; set; } = false;
+
+    protected override async void OnInitialized()
+    {
+        ShowSpinner = true;
+        base.OnInitialized();
+
+        await GetCategories();
+    }
+
+    private async Task GetCategories()
+    {
+        var categoryResponse = await _catService.GetProductCategories();
+        if (categoryResponse.Status)
+        {
+            Categories = categoryResponse.ProductCategories.ToList();
+            ParentCategories = Categories.Where(x => x.ParentProductCategoryID != null).ToList();
+        }
+        else
+        {
+
+        }
+        StateHasChanged();
+    }
+
+    public async void OnActionBegin(ActionEventArgs<ProductCategory> args)
+    {
+        if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Add")
+        {
+        }
+    }
+
+
+    public async void OnActionComplete(ActionEventArgs<ProductCategory> args)
+    {
+        if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Add")
+        {
+            args.Data.ModifiedDate = DateTime.Now;
+            var response = await _catService.Add(args.Data);
+            await js.InvokeVoidAsync("alert", response.Message);
+        }
+        if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Edit")
+        {
+            args.Data.ModifiedDate = DateTime.Now;
+            var response = await _catService.Edit(args.Data);
+            await js.InvokeVoidAsync("alert", response.Message);
+        }
+    }
+}

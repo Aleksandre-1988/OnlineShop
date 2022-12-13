@@ -88,8 +88,7 @@ namespace OnlineShop.API.Controllers
         }
 
         // POST api/<ProductController>/Update
-        [HttpPost]
-        [Route("Update")]
+        [HttpPost("Update")]
         public IActionResult Update([FromBody] Product productToEdit)
         {
             try
@@ -105,10 +104,12 @@ namespace OnlineShop.API.Controllers
         }
 
         // DELETE api/<ProductController>/Remove/5
-        [HttpDelete]
-        [Route("Remove/{id}")]
-        public IActionResult Remove([FromRoute]int id)
+        [HttpDelete("Remove/{id:int}")]
+        public IActionResult Remove(int id)
         {
+            if (id <= 0)
+                return BadRequest("Product id is not valid");
+
             var order = _unit.salesOrderDetailRep.Find(x => x.ProductID == id);
             if(order.Any())
             {
@@ -118,11 +119,27 @@ namespace OnlineShop.API.Controllers
             {
                 _unit.productRep.Remove(id);
                 _unit.Save();
-                return Ok();
+                return Ok(order.Count());
             }
             catch (Exception ex)
             {
                 return StatusCode(500, "Internal Server Error: Can't Delete data from DataBase");
+            }
+        }
+
+        // GET: api/<ProductController>
+        [HttpGet("Models/Getall")]
+        public IActionResult Getall()
+        {
+            var productModels = _unit.productModelRep.GetAll();
+
+            if (productModels != null)
+            {
+                return Ok(productModels);
+            }
+            else
+            {
+                return NotFound();
             }
         }
     }

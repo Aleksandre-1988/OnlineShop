@@ -1,5 +1,4 @@
-﻿@page "/Products"
-@using Microsoft.Extensions.Localization
+﻿@using Microsoft.Extensions.Localization
 @using OnlineShop.CustomResponses
 @using OnlineShop.Model
 @using OnlineShop.Services.Contracts
@@ -7,15 +6,16 @@
 @using System.Reflection
 
 @inject IProductService _prodService;
+@inject IProductCategoryService _prodCategoryService;
 @inject IJSRuntime js;
 @inject NavigationManager _navManager;
 
 
 @if(productList != null)
 {
-<h3>Products Page</h3>
+    <h3>Products Page</h3>
 
-    <SfGrid TValue="Product" DataSource="productList"
+    <SfGrid TValue="Product" DataSource="productList" 
         EnableHeaderFocus="true" 
         AllowFiltering=true AllowResizing=true AllowPaging=true AllowSorting=true
         Height="500" Width="100%"
@@ -36,20 +36,20 @@
                         byte[] bytes = prod.ThumbNailPhoto;
                         string base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
                         var imgSrource = $"data:image/png;base64,{base64String}";
-                                <div class="photo">
-                                    <img src=@imgSrource/>
+                                <div class="grid-photo">
+                                    <img src=@imgSrource class="img-thumbnail" />
                                 </div>
                     }
                 </Template>   
             </GridColumn>
             <GridColumn Field="@nameof(Product.Name)" HeaderText="Name" AutoFit=true TextAlign="TextAlign.Left"/>
-            <GridColumn Field="@nameof(Product.ProductNumber)" HeaderText="Number" Width="230" TextAlign="TextAlign.Left"/>
+            <GridColumn Field="@nameof(Product.ProductNumber)" HeaderText="Number" Width="220" TextAlign="TextAlign.Left"/>
             <GridColumn Field="@nameof(Product.ListPrice)" HeaderText="Price" Format="C2" Width="150" TextAlign="TextAlign.Left"/>
             <GridColumn Field="@nameof(Product.Color)" HeaderText="Color" Width="150" TextAlign="TextAlign.Left">
                 <EditTemplate>
                     @{
                         var prod = context as Product;
-                                <div class="container" style="color:@prod.Color">
+                                <div>
                                     <SfDropDownList DataSource="@ColorList" TItem="Colors" TValue="string" @bind-Value="@prod.Color">
                                         <DropDownListFieldSettings 
                                             Value="ColorName">
@@ -70,13 +70,13 @@
             </GridColumn>
             <GridColumn Field="@nameof(Product.ModifiedDate)" HeaderText="Modified" Format="d" Width="150" TextAlign="TextAlign.Left"/>
             <GridColumn Field="@nameof(Product.Size)" HeaderText="Size" AutoFit=true TextAlign="TextAlign.Left"/>
-            <GridForeignColumn Field="@nameof(Product.ProductCategoryID)" HeaderText="Category"
+            <GridForeignColumn Field="@nameof(Product.ProductCategoryID)" HeaderText="Category" Width="250"
                                            ForeignDataSource="@productCategoryList"
                                            ForeignKeyValue="Name"
                                            ForeignKeyField="ProductCategoryID"
                                            AutoFit=true>
             </GridForeignColumn>
-            <GridForeignColumn Field="@nameof(Product.ProductModelID)" HeaderText="Model"
+            <GridForeignColumn Field="@nameof(Product.ProductModelID)" HeaderText="Model" Width="250"
                                            ForeignDataSource="@productModelList"
                                            ForeignKeyValue="Name"
                                            ForeignKeyField="ProductModelID"
@@ -92,7 +92,7 @@
                         @{
                             var prod = (context as Product);
 
-                                    <SfButton Content="" OnClick="@((args) => ShowProdInfo_Click(args, prod))" IconCss="e-icons e-eye" CssClass="btn e-info"></SfButton>
+                            <SfButton Content="" OnClick="@((args) => ShowProdInfo_Click(args, prod))" IconCss="e-icons e-eye" CssClass="btn e-info"></SfButton>
                         }
                     </Template>
                 </GridColumn>
@@ -113,15 +113,32 @@ else
     </SfSpinner>
 }
 
+<SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@prodInfoVisible">
+    <DialogTemplates>
+        <Header> <b>Product Name:</b> @selectedProduct.Name  <b>Product ID:</b> @selectedProduct.ProductID </Header>
+        <Content> 
+            <Product_Info product="@selectedProduct" productCategoryList="@productCategoryList" productModelList="@productModelList" CloseProductInfoDialog="@CloseprodInfo" />
+        </Content>
+    </DialogTemplates>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
+    <DialogButtons>
+        <DialogButton Content="Hide" IsPrimary="true" OnClick="@CloseprodInfo" />
+    </DialogButtons>
+</SfDialog>
+
+<style>
+    
+</style>
+
 @code {
     public List<Product> productList { get; set; }
     public List<ProductCategory> productCategoryList { get; set; }
     public List<ProductModel> productModelList { get; set; }
     public ProductResponse prodResponse { get; set; }
-    public ProductCategoryResponse productCategoryResponse { get; set; }
-    public ProductModelResponse productModelResponse { get; set; }
 
-    public Product selectedProduct { get; set; }
+    private bool prodInfoVisible { get; set; } = false;
+
+    public Product selectedProduct { get; set; } = new Product();
 
     public List<Colors> ColorList { get; set; }
 
@@ -153,7 +170,9 @@ else
 
     private async Task GetProductCategories()
     {
-        productCategoryResponse = await _prodService.GetCategories();
+        ProductCategoryResponse productCategoryResponse = new ProductCategoryResponse();
+
+        productCategoryResponse = await _prodCategoryService.GetProductCategories();
         if(productCategoryResponse.Status)
         {
             productCategoryList = productCategoryResponse.ProductCategories;
@@ -166,6 +185,8 @@ else
 
     private async Task GetProductModels()
     {
+        ProductModelResponse productModelResponse = new ProductModelResponse();
+
         productModelResponse = await _prodService.GetModels();
         if(productModelResponse.Status)
         {
@@ -179,10 +200,8 @@ else
 
     public async void ShowProdInfo_Click(MouseEventArgs args, Product prod)
     {
-        if(prod != null )
-        {
-            _navManager.NavigateTo($"/Product/Info/{prod.ProductID}");
-        }
+        selectedProduct = prod;
+        prodInfoVisible = true;
     }
 
     private List<Colors> GetAllColors()
@@ -198,6 +217,7 @@ else
 
         return allColors;
     }
+
     public class Colors
     {
         public string ColorName { get; set; }
@@ -219,5 +239,15 @@ else
             prodResponse = await _prodService.Remove(arg.Data.ProductID);
             await js.InvokeVoidAsync("alert", prodResponse.Message);
         }
+    }
+
+    private void OpenprodInfo()
+    {
+        this.prodInfoVisible = true;
+    }
+
+    private void CloseprodInfo()
+    {
+        this.prodInfoVisible = false;
     }
 }

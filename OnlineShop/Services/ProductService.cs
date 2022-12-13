@@ -26,7 +26,41 @@ namespace OnlineShop.Services
             };
         }
 
-        public async Task<ProductResponse> Take(int rowCount)
+        public async Task<ProductResponse> GetById(int id)
+        {
+            ProductResponse prodResponse = new ProductResponse();
+            string endpoint = $"{_url}/Product/{id}";
+
+            HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                string content = await httpResponse.Content.ReadAsStringAsync();
+
+                prodResponse.Product = JsonSerializer.Deserialize<Product>(content, _serializerOptions);
+                prodResponse.Status = true;
+
+                return prodResponse;
+            }
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return new ProductResponse
+                {
+                    Status = false,
+                    Message = "Product you looking for, Does not exists"
+                };
+            }
+            else
+            {
+                return new ProductResponse
+                {
+                    Status = false,
+                    Message = httpResponse.StatusCode +": Error",
+                };
+            }
+        }
+
+        public async Task<ProductResponse> Take(int rowCount = 10)
         {
             ProductResponse prodResponse = new ProductResponse();
             string endpoint = $"{_url}/Product/Take/{rowCount}";
@@ -97,7 +131,7 @@ namespace OnlineShop.Services
         public async Task<ProductCategoryResponse> GetCategories()
         {
             ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
-            string endpoint = $"{_url}/Product";
+            string endpoint = $"{_url}/Product/Categories/GetAll";
             
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 
@@ -131,7 +165,7 @@ namespace OnlineShop.Services
         public async Task<ProductModelResponse> GetModels()
         {
             ProductModelResponse prodModelResponse = new ProductModelResponse();
-            string endpoint = $"{_url}/Product";
+            string endpoint = $"{_url}/ProductModel";
             
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 
@@ -234,7 +268,7 @@ namespace OnlineShop.Services
         public async Task<ProductResponse> Remove(int productIdToDelete)
         {
             ProductResponse prodResponse = new ProductResponse();
-            string endpoint = $"{_url}/Product/Remove{productIdToDelete}";
+            string endpoint = $"{_url}/Product/Remove/{productIdToDelete}";
             
             HttpResponseMessage httpResponse = await httpClient.DeleteAsync(endpoint);
 
