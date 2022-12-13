@@ -1,19 +1,202 @@
-﻿@page "/Product/Info/{id:int}"
+﻿@using OnlineShop.CustomResponses;
+@using OnlineShop.Model;
+@using OnlineShop.Services.Contracts;
+@using Syncfusion.Blazor.Cards;
 
-<h3>Product_Info</h3>
+@inject NavigationManager _navManager;
+@inject IProductService _prodService;
+@inject IProductCategoryService _prodCategoryService;
+@inject IJSRuntime js;
+@inject NavigationManager _navManager;
 
-@if(id != 0)
+<h2>Product Info</h2>
+@if(product != null && productModelList !=null && productCategoryList !=null)
 {
-    @id
+    <div class="row col-md-6 m-5">
+        <div class="row m-1 p-1">
+            <div class="col col-md-7">
+                    @{
+                        byte[] bytes = product.ThumbNailPhoto;
+                        if(bytes != null)
+                        {
+                            string base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
+                            var imgSrource = $"data:image/png;base64,{base64String}";
+                            <SfCard>
+                                <CardHeader SubTitle="@product.ThumbnailPhotoFileName"></CardHeader>
+                                <CardContent>
+                                    <div class="photo">
+                                        <img src=@imgSrource />
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <InputFile class="custom-file-input" multiple="false" OnChange="OnChange" accept="image/png, image/jpeg, image/gif" id="inputFile" />
+                                        <label class="custom-file-label" for="inputFile">Choose photo</label>
+                                    </div>
+                                </div>
+                                </CardFooter>
+                            </SfCard>
+                        }
+                    }
+            </div>
+            <div class="col col-md-3">
+                <SfColorPicker Value="@product.Color"> Product Color</SfColorPicker>
+            </div>
+            </div>
+            <div class="col col-md-6 col-sm-12">
+            <div class="row m-1 p-1">
+                <SfTextBox Placeholder="Product Name" @bind-Value="@product.Name" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfTextBox Placeholder="Product Number" @bind-Value="@product.ProductNumber" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfNumericTextBox TValue="decimal" Placeholder="Product Price" @bind-Value="@product.ListPrice" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfNumericTextBox TValue="decimal" Placeholder="Standard Cost" @bind-Value="@product.StandardCost" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfTextBox Placeholder="Product Size" @bind-Value="@product.Size" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfNumericTextBox TValue="decimal?" Placeholder="Product Weight" @bind-Value="@product.Weight" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+        </div>
+        <div class="col col-md-6 col-sm-12">
+            <div class="row m-1 p-1">
+                <SfDropDownList AllowFiltering=true Placeholder="Product Category" DataSource="@productCategoryList" Enabled="@EditProduct" TItem="ProductCategory" FloatLabelType="FloatLabelType.Auto" TValue="int?" @bind-Value="@product.ProductCategoryID">
+                <DropDownListFieldSettings Value="ProductCategoryID" Text="Name">
+                    </DropDownListFieldSettings>
+                </SfDropDownList>
+            </div>
+            <div class="row m-1 p-1">
+                <SfDropDownList AllowFiltering=true Placeholder="Product Model" DataSource="@productModelList" Enabled="@EditProduct" TItem="ProductModel" TValue="int?" FloatLabelType="FloatLabelType.Auto" @bind-Value="@product.ProductModelID">
+                    <DropDownListFieldSettings Value="ProductModelID" Text="Name">
+                    </DropDownListFieldSettings>
+                </SfDropDownList>
+            </div>
+            <div class="row m-1 p-1">
+                <SfDatePicker Placeholder="Product Sell StartDate" @bind-Value="@product.SellStartDate" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfDatePicker TValue="DateTime?" Placeholder="Product Sell EndDate" @bind-Value="@product.SellEndDate" Enabled="EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfDatePicker TValue="DateTime?" Placeholder="Product Sell Discontinued Date" @bind-Value="@product.DiscontinuedDate" Enabled="EditProduct" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="row m-1 p-1">
+                <SfDatePicker TValue="DateTime" Placeholder="Product Modified Date" @bind-Value="@product.ModifiedDate" Enabled=false ValidateOnInput=true />
+            </div>
+        </div>
+    </div>
+    <div class="row buttons-row">
+        <div class="col col-md-3">
+            @if (!EditProduct)
+            {
+                <SfButton Content="Edit Product" CssClass="e-warning" OnClick="@(() => EditProduct = !EditProduct)"/>
+            }
+            else
+            {
+                <SfButton Content="Save Product" CssClass="e-success" OnClick="@UpdateProduct" />
+
+            }
+        </div> 
+        <div class="col col-md-3">
+            <SfButton Content="Delete Product" CssClass="e-danger" OnClick="@(() => deleteProductConfirmationVisible = true)" />
+        </div>
+        <div class="col col-md-3">
+            <SfButton Content="Reset" CssClass="e-info" OnClick="@(() => product = productBeforeUpdate)" />
+        </div>
+    </div>
 }
-else
-{
-    <p>Loading ...  Please Wait</p>
-}
+
+<SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@deleteProductConfirmationVisible">
+    <DialogTemplates>
+        <Header> Confirm To delete Product !!! </Header>
+        <Content> 
+            Do you really want to delete Product: @product.Name ?
+        </Content>
+    </DialogTemplates>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
+    <DialogButtons>
+        <SfButton Content="Delete" CssClass="e-warning" OnClick="@ConfirmDelete" />
+        <SfButton Content="Cancel" CssClass="e-warning" OnClick="@(() => deleteProductConfirmationVisible = false)" />
+    </DialogButtons>
+</SfDialog>
+
+<style>
+    .buttons-row{
+        margin:5px;
+        padding: 10px;
+    }
+</style>
 
 @code {
     [Parameter]
-    public int id { get; set; }
+    public List<ProductModel> productModelList { get; set; }
+    [Parameter]
+    public List<ProductCategory> productCategoryList { get; set; }
+    [Parameter]
+    public Product product { get; set; }
+    [Parameter]
+    public EventCallback CloseProductInfoDialog { get; set; }
 
+    public Product productBeforeUpdate { get; set; }
 
+    public bool EditProduct { get; set; } = false;
+    public bool deleteProductConfirmationVisible { get; set; } = false;
+
+    public string imgSrc { get; set; } = "data:image/png;base64,";
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        productBeforeUpdate = product;
+    }
+
+    private async void UpdateProduct()
+    {
+        var response = await _prodService.Update(product);
+        await js.InvokeVoidAsync("alert", response.Message);
+        if (!response.Status)
+        {
+            product = productBeforeUpdate;
+        }
+        else
+        {
+            EditProduct = false;
+        }
+        StateHasChanged();
+    }
+
+    private async void ConfirmDelete()
+    {
+        var response = await _prodService.Remove(product.ProductID);
+        await js.InvokeVoidAsync("alert", response.Message);
+        if (response.Status)
+        {
+            await CloseProductInfoDialog.InvokeAsync();
+            StateHasChanged();
+        }
+    }
+
+    async Task OnChange(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(); // get the files selected by the users
+        foreach (var file in files)
+        {
+            var resizedFile = await file.RequestImageFileAsync(file.ContentType, 640, 480); // resize the image file
+            var buf = new byte[resizedFile.Size]; // allocate a buffer to fill with the file's data
+            using (var stream = resizedFile.OpenReadStream())
+            {
+                await stream.ReadAsync(buf); // copy the stream to the buffer
+                var base64String = Convert.ToBase64String(buf);
+                product.ThumbNailPhoto = File.ReadAllBytes(base64String);
+                product.ThumbnailPhotoFileName = resizedFile.Name;
+            }
+        }
+        StateHasChanged();
+    }
 }

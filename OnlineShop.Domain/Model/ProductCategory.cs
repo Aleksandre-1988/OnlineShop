@@ -16,8 +16,6 @@ namespace OnlineShop.Domain.Model
     {
         public ProductCategory()
         {
-            InverseParentProductCategory = new HashSet<ProductCategory>();
-            Products = new HashSet<Product>();
         }
 
         /// <summary>
@@ -44,11 +42,6 @@ namespace OnlineShop.Domain.Model
         [Column(TypeName = "datetime")]
         public DateTime ModifiedDate { get; set; }
 
-        [ForeignKey("ParentProductCategoryID")]
-        [InverseProperty("InverseParentProductCategory")]
-        public virtual ProductCategory? ParentProductCategory { get; set; }
-        [InverseProperty("ParentProductCategory")]
-        public virtual ICollection<ProductCategory> InverseParentProductCategory { get; set; }
         [InverseProperty("ProductCategory")]
         public virtual ICollection<Product> Products { get; set; }
     }

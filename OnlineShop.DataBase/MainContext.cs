@@ -195,10 +195,6 @@ namespace OnlineShop.DAL
                     .HasDefaultValueSql("(newid())")
                     .HasComment("ROWGUIDCOL number uniquely identifying the record. Used to support a merge replication sample.");
 
-                entity.HasOne(d => d.ParentProductCategory)
-                    .WithMany(p => p.InverseParentProductCategory)
-                    .HasForeignKey(d => d.ParentProductCategoryID)
-                    .HasConstraintName("FK_ProductCategory_ProductCategory_ParentProductCategoryID_ProductCategoryID");
             });
 
             modelBuilder.Entity<ProductDescription>(entity =>
@@ -223,6 +219,7 @@ namespace OnlineShop.DAL
                 entity.Property(e => e.ModifiedDate).HasDefaultValueSql("(getdate())");
 
                 entity.Property(e => e.rowguid).HasDefaultValueSql("(newid())");
+
             });
 
             modelBuilder.Entity<ProductModelProductDescription>(entity =>

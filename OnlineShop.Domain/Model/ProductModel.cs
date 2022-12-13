@@ -20,7 +20,8 @@ namespace OnlineShop.Domain.Model
         public int ProductModelID { get; set; }
         [StringLength(50)]
         public string Name { get; set; } = null!;
-        [Column(TypeName = "xml")]
+
+        [Column(TypeName = "xml")]//error
         public string? CatalogDescription { get; set; }
         public Guid rowguid { get; set; }
         [Column(TypeName = "datetime")]

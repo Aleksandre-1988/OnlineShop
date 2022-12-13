@@ -5,8 +5,9 @@ namespace OnlineShop.Services.Contracts
 {
     public interface IProductService
     {
-        Task<ProductResponse> GetAll();
+        Task<ProductResponse> GetById(int id);
         Task<ProductResponse> Take(int rowCount);
+        Task<ProductResponse> GetAll();
 
         Task<ProductResponse> Create(Product productToAdd);
         Task<ProductResponse> Remove(int productIdToDelete);
