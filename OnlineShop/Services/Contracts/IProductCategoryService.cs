@@ -8,6 +8,7 @@ namespace OnlineShop.Services.Contracts
         Task<ProductCategoryResponse> GetProductCategories();
         Task<ProductCategoryResponse> Add(ProductCategory productCategoryToAdd);
         Task<ProductCategoryResponse> Edit(ProductCategory productCategoryToEdit);
+        Task<ProductCategoryResponse> Delete(int id);
 
     }
 }

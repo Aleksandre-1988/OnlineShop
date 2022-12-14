@@ -26,6 +26,8 @@
                            ForeignKeyField="ProductCategoryID"
                            AutoFit=true>
             </GridForeignColumn>
+            <GridColumn Field="@nameof(ProductCategory.NumberOfProducts)" HeaderText="Number Of Related Products" AutoFit=true AllowEditing=false AllowAdding=false TextAlign="TextAlign.Center" />
+
         </GridColumns>
     </SfGrid>
 }
@@ -58,20 +60,12 @@ else
         }
         else
         {
-
+            await js.InvokeVoidAsync("alert",categoryResponse.Message);
         }
         StateHasChanged();
     }
 
     public async void OnActionBegin(ActionEventArgs<ProductCategory> args)
-    {
-        if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Add")
-        {
-        }
-    }
-
-
-    public async void OnActionComplete(ActionEventArgs<ProductCategory> args)
     {
         if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Add")
         {
@@ -85,5 +79,17 @@ else
             var response = await _catService.Edit(args.Data);
             await js.InvokeVoidAsync("alert", response.Message);
         }
+        if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete) && args.Action == "Delete")
+        {
+            int id = args.Data.ProductCategoryID;
+            var response = await _catService.Delete(id);
+            await js.InvokeVoidAsync("alert", response.Message);
+        }
+    }
+
+
+    public async void OnActionComplete(ActionEventArgs<ProductCategory> args)
+    {
+        
     }
 }

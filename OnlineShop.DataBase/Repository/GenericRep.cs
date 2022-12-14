@@ -81,7 +81,6 @@ namespace OnlineShop.DAL.Repository
 
         public void Update(TEntity entityToUpdate)
         {
-            _context.Entry(entityToUpdate).State = EntityState.Detached;
             _context.Set<TEntity>().Attach(entityToUpdate);
             _context.Entry(entityToUpdate).State = EntityState.Modified;
         }

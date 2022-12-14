@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OnlineShop.Api.Model;
 using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
+using OnlineShop.API.Extension;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,9 +25,12 @@ namespace OnlineShop.API.Controllers
         {
             var prodCategoryList = _unit.productCategoryRep.GetAll();
 
-            if (prodCategoryList != null)
+            List<ProdCat_Part> prodCat_Part = new List<ProdCat_Part>();
+            Extensions.ConvertToProductCategoryPart(prodCat_Part, prodCategoryList);
+
+            if (prodCat_Part != null)
             {
-                return Ok(prodCategoryList);
+                return Ok(prodCat_Part);
             }
             else
             {
@@ -51,19 +56,17 @@ namespace OnlineShop.API.Controllers
 
         // POST api/<ProductCategory>/Add
         [HttpPost("Add")]
-        public IActionResult Add([FromBody] ProductCategory productCategoryToAdd)
+        public IActionResult Add([FromBody] ProdCat_Part productCategoryToAdd)
         {
-            if (productCategoryToAdd == null)
-            {
-                return BadRequest();
-            }
+            ProductCategory prodCategory = new ProductCategory();
+            Extensions.MapToProductCategory(prodCategory, productCategoryToAdd);
 
             try
             {
-                _unit.productCategoryRep.Add(productCategoryToAdd);
+                _unit.productCategoryRep.Add(prodCategory);
                 _unit.Save();
 
-                return Ok(productCategoryToAdd);
+                return Ok(prodCategory.Name);
             }
             catch (Exception ex)
             {
@@ -72,21 +75,17 @@ namespace OnlineShop.API.Controllers
         }
 
         // PUT api/<ProductCategory>/5
-        [HttpPut]
-        public IActionResult Update([FromBody] ProductCategory productCategoryToEdit)
+        [HttpPut("Update")]
+        public IActionResult Update([FromBody] ProdCat_Part productCategoryToEdit)
         {
-            var prodCategory = Get(productCategoryToEdit.ProductCategoryID);
+            ProductCategory prodCategory = _unit.productCategoryRep.Get(productCategoryToEdit.ProductCategoryID);
 
-            if (prodCategory == null)
-            {
-                return BadRequest();
-            }
-
+            Extensions.MapToProductCategory(prodCategory, productCategoryToEdit);
             try
             {
-                _unit.productCategoryRep.Update(productCategoryToEdit);
+                _unit.productCategoryRep.Update(prodCategory);
                 _unit.Save();
-                return Ok(productCategoryToEdit);
+                return Ok(prodCategory.Name +" Updated");
             }
             catch (Exception ex)
             {
@@ -95,16 +94,9 @@ namespace OnlineShop.API.Controllers
         }
 
         // DELETE api/<ProductCategory>/5
-        [HttpDelete("{id:int}")]
+        [HttpDelete("Remove/{id:int}")]
         public IActionResult Remove(int id)
         {
-            var prodCategory = Get(id);
-
-            if (prodCategory == null)
-            {
-                return BadRequest();
-            }
-
             try
             {
                 _unit.productCategoryRep.Remove(id);

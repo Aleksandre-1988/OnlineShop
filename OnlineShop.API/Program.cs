@@ -26,11 +26,20 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseCors(policy =>
+    policy.WithOrigins("https://localhost:7299", "http://localhost:7299")
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowAnyOrigin()
+    .WithHeaders(HeaderNames.ContentType)
+    );
 }
 
 app.UseCors(policy => 
     policy.WithOrigins("https://localhost:7299","http://localhost:7299/")
     .AllowAnyMethod()
+    .AllowAnyHeader()
     .WithHeaders(HeaderNames.ContentType)
     );
 

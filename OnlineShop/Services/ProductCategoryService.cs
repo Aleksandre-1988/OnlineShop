@@ -38,7 +38,7 @@ namespace OnlineShop.Services
             {
                 string content = await httpResponse.Content.ReadAsStringAsync();
 
-                prodCategoryResponse.ProductCategories = JsonSerializer.Deserialize<List<ProductCategory>>(content, _serializerOptions);
+                prodCategoryResponse.Message = content;
                 prodCategoryResponse.Status = true;
 
                 return prodCategoryResponse;
@@ -61,10 +61,34 @@ namespace OnlineShop.Services
             }
         }
 
+        public async Task<ProductCategoryResponse> Delete(int id)
+        {
+            ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
+            string endpoint = $"{_url}/ProductCategory/Remove/{id}";
+
+            HttpResponseMessage httpResponse = await httpClient.DeleteAsync(endpoint);
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                prodCategoryResponse.Message = $"Product Category with ID: {id} Syccesfylly Deleted";
+                prodCategoryResponse.Status = true;
+
+                return prodCategoryResponse;
+            }
+            else
+            {
+                return new ProductCategoryResponse
+                {
+                    Status = false,
+                    Message = $"Product Category with ID: {id} Could not Deleted",
+            };
+            }
+        }
+
         public async Task<ProductCategoryResponse> Edit(ProductCategory productCategoryToEdit)
         {
             ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
-            string endpoint = $"{_url}/ProductCategory/Edit";
+            string endpoint = $"{_url}/ProductCategory/Update";
 
             HttpResponseMessage httpResponse = await httpClient.PutAsJsonAsync(endpoint, productCategoryToEdit);
 
@@ -72,7 +96,7 @@ namespace OnlineShop.Services
             {
                 string content = await httpResponse.Content.ReadAsStringAsync();
 
-                prodCategoryResponse.ProductCategories = JsonSerializer.Deserialize<List<ProductCategory>>(content, _serializerOptions);
+                prodCategoryResponse.Message = content;
                 prodCategoryResponse.Status = true;
 
                 return prodCategoryResponse;

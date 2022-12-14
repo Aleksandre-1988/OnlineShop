@@ -45,7 +45,7 @@
                     }
             </div>
             <div class="col col-md-3">
-                <SfColorPicker Disabled="@(!EditProduct)" Value="@product.Color"> Product Color</SfColorPicker>
+                <SfColorPicker Disabled="@(!EditProduct)" @bind-Value="@product.Color"> Product Color</SfColorPicker>
             </div>
             </div>
             <div class="col col-md-6 col-sm-12">
@@ -85,13 +85,13 @@
                 <SfDatePicker Placeholder="Product Sell StartDate" @bind-Value="@product.SellStartDate" Enabled="@EditProduct" FloatLabelType="FloatLabelType.Auto" />
             </div>
             <div class="row m-1 p-1">
-                <SfDatePicker TValue="DateTime?" Placeholder="Product Sell EndDate" @bind-Value="@product.SellEndDate" Enabled="EditProduct" FloatLabelType="FloatLabelType.Auto" />
+                <SfDatePicker TValue="DateTime?" Placeholder="Product Sell EndDate" @bind-Value="@product.SellEndDate" Enabled="EditProduct" FloatLabelType="FloatLabelType.Always" />
             </div>
             <div class="row m-1 p-1">
-                <SfDatePicker TValue="DateTime?" Placeholder="Product Sell Discontinued Date" @bind-Value="@product.DiscontinuedDate" Enabled="EditProduct" FloatLabelType="FloatLabelType.Auto" />
+                <SfDatePicker TValue="DateTime?" Placeholder="Product Sell Discontinued Date" @bind-Value="@product.DiscontinuedDate" Enabled="EditProduct" FloatLabelType="FloatLabelType.Always" />
             </div>
             <div class="row m-1 p-1">
-                <SfDatePicker TValue="DateTime" Placeholder="Product Modified Date" @bind-Value="@product.ModifiedDate" Enabled=false ValidateOnInput=true />
+                <SfDatePicker TValue="DateTime" Placeholder="Product Modified Date" @bind-Value="@product.ModifiedDate" Enabled=false ValidateOnInput=true FloatLabelType="FloatLabelType.Always" />
             </div>
         </div>
     </div>
