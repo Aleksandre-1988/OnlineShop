@@ -5,7 +5,7 @@ namespace OnlineShop.API.Extension
 {
     public static class Extensions
     {
-        public static ProductCategory MapToProductCategory (ProductCategory category, ProdCat_Part prodCat_Part)
+        public static ProductCategory MapToProductCategory (ProductCategory category, ProductCategory_View prodCat_Part)
         {
             ProductCategory productCategory = new ProductCategory ();
 
@@ -18,17 +18,21 @@ namespace OnlineShop.API.Extension
 
         }
 
-        public static IEnumerable<ProdCat_Part> ConvertToProductCategoryPart (IEnumerable<ProdCat_Part> prodCat_Parts, IEnumerable<ProductCategory> productCategories)
+        public static List<ProductCategory_View> ConvertToProductCategoryPart (this List<ProductCategory_View> prodCat_ViewList, List<ProductCategory> productCategories)
         {
-            return from pc in productCategories
-                   select new ProdCat_Part
-                   {
-                       ProductCategoryID = pc.ProductCategoryID,
-                       ParentProductCategoryID = pc.ParentProductCategoryID,
-                       ModifiedDate = pc.ModifiedDate,
-                       Name = pc.Name,
-                       NumberOfProducts = pc.Products.Count()
-                   };
+            foreach (var item in productCategories)
+            {
+                ProductCategory_View productCategory_View = new ProductCategory_View();
+
+                productCategory_View.ProductCategoryID = item.ProductCategoryID;
+                productCategory_View.ParentProductCategoryID = item.ParentProductCategoryID;
+                productCategory_View.Name = item.Name;
+                productCategory_View.ModifiedDate = item.ModifiedDate;
+                productCategory_View.NumberOfProducts = item.Products.Count();
+
+                prodCat_ViewList.Add(productCategory_View);
+            }
+            return prodCat_ViewList;
         }
     }
 }

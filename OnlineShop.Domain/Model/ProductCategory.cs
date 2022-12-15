@@ -16,6 +16,7 @@ namespace OnlineShop.Domain.Model
     {
         public ProductCategory()
         {
+            Products = new HashSet<Product>();
         }
 
         /// <summary>

@@ -33,7 +33,7 @@ namespace OnlineShop.DAL.Repository
             {
                 query = query.Where(predicate);
             }
-            // Include() Method For the related dataTables, Nothing for ThenInclude() Method
+            // Include() Method For the related dataTables
             foreach (var prop in includedProperty.Split(new char[]{','}, StringSplitOptions.RemoveEmptyEntries))
             {
                 query = query.Include(prop);

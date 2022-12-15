@@ -23,14 +23,14 @@ namespace OnlineShop.API.Controllers
         [HttpGet("GetAll")]
         public IActionResult GetAll()
         {
-            var prodCategoryList = _unit.productCategoryRep.GetAll();
+            var prodCategoryList = _unit.productCategoryRep.Find(null,null,"Products").ToList();
 
-            List<ProdCat_Part> prodCat_Part = new List<ProdCat_Part>();
-            Extensions.ConvertToProductCategoryPart(prodCat_Part, prodCategoryList);
+            List<ProductCategory_View> prodCat_View = new List<ProductCategory_View>();
+            prodCat_View.ConvertToProductCategoryPart(prodCategoryList);
 
-            if (prodCat_Part != null)
+            if (prodCat_View != null)
             {
-                return Ok(prodCat_Part);
+                return Ok(prodCat_View);
             }
             else
             {
@@ -56,7 +56,7 @@ namespace OnlineShop.API.Controllers
 
         // POST api/<ProductCategory>/Add
         [HttpPost("Add")]
-        public IActionResult Add([FromBody] ProdCat_Part productCategoryToAdd)
+        public IActionResult Add([FromBody] ProductCategory_View productCategoryToAdd)
         {
             ProductCategory prodCategory = new ProductCategory();
             Extensions.MapToProductCategory(prodCategory, productCategoryToAdd);
@@ -76,7 +76,7 @@ namespace OnlineShop.API.Controllers
 
         // PUT api/<ProductCategory>/5
         [HttpPut("Update")]
-        public IActionResult Update([FromBody] ProdCat_Part productCategoryToEdit)
+        public IActionResult Update([FromBody] ProductCategory_View productCategoryToEdit)
         {
             ProductCategory prodCategory = _unit.productCategoryRep.Get(productCategoryToEdit.ProductCategoryID);
 

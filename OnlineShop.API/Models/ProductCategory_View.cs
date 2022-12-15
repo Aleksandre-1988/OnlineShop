@@ -2,7 +2,7 @@
 
 namespace OnlineShop.Api.Model
 {
-    public class ProdCat_Part
+    public class ProductCategory_View
     {
         public int ProductCategoryID { get; set; }
 

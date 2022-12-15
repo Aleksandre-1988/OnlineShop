@@ -11,8 +11,6 @@ namespace OnlineShop.Model
         [StringLength(50)]
         public string Name { get; set; } = null!;
 
-        public Guid rowguid { get; set; }
-
         public DateTime ModifiedDate { get; set; }
 
         public int NumberOfProducts { get; set; }

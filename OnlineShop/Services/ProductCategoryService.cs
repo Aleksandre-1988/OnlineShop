@@ -64,6 +64,7 @@ namespace OnlineShop.Services
         public async Task<ProductCategoryResponse> Delete(int id)
         {
             ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
+
             string endpoint = $"{_url}/ProductCategory/Remove/{id}";
 
             HttpResponseMessage httpResponse = await httpClient.DeleteAsync(endpoint);

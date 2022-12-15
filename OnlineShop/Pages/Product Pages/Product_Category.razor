@@ -81,9 +81,17 @@ else
         }
         if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete) && args.Action == "Delete")
         {
-            int id = args.Data.ProductCategoryID;
-            var response = await _catService.Delete(id);
-            await js.InvokeVoidAsync("alert", response.Message);
+            if(args.Data.NumberOfProducts > 0)
+            {
+                await js.InvokeVoidAsync("alert", "You Can not delete Category if here exists any product related to it");
+                await GetCategories();
+            }
+            else
+            {
+                int id = args.Data.ProductCategoryID;
+                var response = await _catService.Delete(id);
+                await js.InvokeVoidAsync("alert", response.Message);
+            }
         }
     }
 
