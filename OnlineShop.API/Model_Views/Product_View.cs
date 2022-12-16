@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OnlineShop.Api.Models
+namespace OnlineShop.Api.Model_Views
 {
-    public class ProductModels
+    public class Product_View
     {
         public int ProductID { get; set; }
 

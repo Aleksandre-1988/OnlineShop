@@ -1,4 +1,4 @@
-﻿using OnlineShop.Api.Model;
+﻿using OnlineShop.API.Model_Views;
 using OnlineShop.Domain.Model;
 
 namespace OnlineShop.API.Extension
@@ -18,7 +18,7 @@ namespace OnlineShop.API.Extension
 
         }
 
-        public static List<ProductCategory_View> ConvertToProductCategoryPart (this List<ProductCategory_View> prodCat_ViewList, List<ProductCategory> productCategories)
+        public static List<ProductCategory_View> ConvertToProductCategoryView (this List<ProductCategory_View> prodCat_ViewList, List<ProductCategory> productCategories)
         {
             foreach (var item in productCategories)
             {

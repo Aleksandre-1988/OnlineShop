@@ -1,9 +1,18 @@
+﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
+using OnlineShop.API.Extension;
 using OnlineShop.DAL;
-using OnlineShop.Domain.Model;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Auto Mapper.
+var config = new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile(new ProductAutoMap());
+});
+var mapper = config.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 //SQL Server Connection
 builder.Services.AddDbContext<MainContext>(options =>
@@ -36,8 +45,8 @@ if (app.Environment.IsDevelopment())
     );
 }
 
-app.UseCors(policy => 
-    policy.WithOrigins("https://localhost:7299","http://localhost:7299/")
+app.UseCors(policy =>
+    policy.WithOrigins("https://localhost:7299", "http://localhost:7299/")
     .AllowAnyMethod()
     .AllowAnyHeader()
     .WithHeaders(HeaderNames.ContentType)

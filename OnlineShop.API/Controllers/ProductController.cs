@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OnlineShop.Domain.Interface;
-using OnlineShop.Api.Models;
+using OnlineShop.Api.Model_Views;
 using OnlineShop.Domain.Model;
+using AutoMapper;
 
 namespace OnlineShop.API.Controllers
 {
@@ -10,10 +11,14 @@ namespace OnlineShop.API.Controllers
     public class ProductController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;
+        private readonly IMapper _mapper;
+        private readonly ILogger<ProductController> _logger;
 
-        public ProductController(IUnitOfWork unit)
+        public ProductController(IUnitOfWork unit, IMapper mapper, ILogger<ProductController> logger)
         {
             this._unit = unit;
+            this._mapper = mapper;
+            this._logger = logger;
         }
 
         // GET: api/<ProductController>/Take/5
@@ -21,11 +26,14 @@ namespace OnlineShop.API.Controllers
         [Route("Take/{rowCount:int}")]
         public IActionResult Take(int rowCount = 10 )//Default Take 10
         {
-            var productList = _unit.productRep.Take(rowCount);
+            List<Product> productList = _unit.productRep.Take(rowCount).ToList();
 
             if (productList != null)
             {
-                return Ok(productList);
+                var product_View = _mapper.Map<Product_View>(productList);
+                // product_View.NumberOfOrders = productList.Select(x => x.SalesOrderDetails).Count();
+
+                return Ok(product_View);
             }
             else
             {

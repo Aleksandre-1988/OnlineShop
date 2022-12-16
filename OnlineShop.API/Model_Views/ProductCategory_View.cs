@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OnlineShop.Api.Model
+namespace OnlineShop.API.Model_Views
 {
     public class ProductCategory_View
     {

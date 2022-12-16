@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OnlineShop.Api.Model;
 using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
 using OnlineShop.API.Extension;
+using OnlineShop.API.Model_Views;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,7 +26,7 @@ namespace OnlineShop.API.Controllers
             var prodCategoryList = _unit.productCategoryRep.Find(null,null,"Products").ToList();
 
             List<ProductCategory_View> prodCat_View = new List<ProductCategory_View>();
-            prodCat_View.ConvertToProductCategoryPart(prodCategoryList);
+            prodCat_View.ConvertToProductCategoryView(prodCategoryList);
 
             if (prodCat_View != null)
             {
