@@ -10,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 var config = new MapperConfiguration(cfg =>
 {
     cfg.AddProfile(new ProductAutoMap());
+    cfg.AddProfile(new CustomerAutoMap());
+    cfg.AddProfile(new AddressAutoMap());
+    cfg.AddProfile(new ProductCategoryAutoMap());
 });
 var mapper = config.CreateMapper();
 builder.Services.AddSingleton(mapper);

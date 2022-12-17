@@ -60,10 +60,10 @@ namespace OnlineShop.Services
             }
         }
 
-        public async Task<ProductResponse> Take(int rowCount = 10)
+        public async Task<ProductResponse> Take(int maxId = 1000)
         {
             ProductResponse prodResponse = new ProductResponse();
-            string endpoint = $"{_url}/Product/Take/{rowCount}";
+            string endpoint = $"{_url}/Product/Take/{maxId}";
             
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 

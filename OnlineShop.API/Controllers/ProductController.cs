@@ -24,16 +24,16 @@ namespace OnlineShop.API.Controllers
         // GET: api/<ProductController>/Take/5
         [HttpGet]
         [Route("Take/{rowCount:int}")]
-        public IActionResult Take(int rowCount = 10 )//Default Take 10
+        public IActionResult Take(int maxId = 1000 )//Default Take 10
         {
-            List<Product> productList = _unit.productRep.Take(rowCount).ToList();
+            List<Product> productList = _unit.productRep
+                .Find(x=> x.ProductID < 1000,null, "SalesOrderDetails")
+                .ToList();
 
             if (productList != null)
             {
-                var product_View = _mapper.Map<Product_View>(productList);
-                // product_View.NumberOfOrders = productList.Select(x => x.SalesOrderDetails).Count();
-
-                return Ok(product_View);
+                List<Product_View> product_Views = _mapper.Map<List<Product>, List<Product_View>>(productList);
+                return Ok(product_Views);
             }
             else
             {
@@ -45,11 +45,15 @@ namespace OnlineShop.API.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var productList = _unit.productRep.GetAll();
+            List<Product> productList = _unit.productRep
+                .Find(x => x.ProductID < 1000, null, "SalesOrderDetails")
+                .ToList();
 
             if (productList != null)
             {
-                return Ok(productList);
+                List<Product_View> product_Views = _mapper.Map<List<Product>, List<Product_View>>(productList);
+
+                return Ok(product_Views);
             }
             else
             {
@@ -65,7 +69,8 @@ namespace OnlineShop.API.Controllers
 
             if (product != null)
             {
-                return Ok(product);
+                Product_View product_View = _mapper.Map<Product_View>(product);
+                return Ok(product_View);
             }
             else
             {
@@ -74,8 +79,8 @@ namespace OnlineShop.API.Controllers
         }
 
         // POST api/<ProductController>/Add
-        [HttpPost]
-        public IActionResult Create([FromBody] Product productToAdd)
+        [HttpPost("Add")]
+        public IActionResult Add([FromBody] Product productToAdd)
         {
             if (productToAdd == null)
             {
@@ -84,12 +89,14 @@ namespace OnlineShop.API.Controllers
 
             try
             {
-                _unit.productRep.Add(productToAdd);
+                Product product = _mapper.Map<Product>(productToAdd);
+                product.ModifiedDate = DateTime.Now;
+                _unit.productRep.Add(product);
                 _unit.Save();
 
                 return Ok(productToAdd);
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, "Internal Server Error: Can't Save data into DataBase");
             }
@@ -101,7 +108,9 @@ namespace OnlineShop.API.Controllers
         {
             try
             {
-                _unit.productRep.Update(productToEdit);
+                Product product = _mapper.Map<Product>(productToEdit);
+                product.ModifiedDate = DateTime.Now;
+                _unit.productRep.Update(product);
                 _unit.Save();
                 return Ok(productToEdit);
             }
@@ -126,10 +135,10 @@ namespace OnlineShop.API.Controllers
             try
             {
                 _unit.productRep.Remove(id);
-                _unit.Save();
-                return Ok(order.Count());
+                int rowsAffected = _unit.Save();
+                return Ok(rowsAffected);
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, "Internal Server Error: Can't Delete data from DataBase");
             }

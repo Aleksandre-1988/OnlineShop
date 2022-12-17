@@ -1,0 +1,227 @@
+﻿@using OnlineShop.CustomResponses;
+@using OnlineShop.Model;
+@using OnlineShop.Services.Contracts;
+@using Syncfusion.Blazor.Cards;
+
+@inject NavigationManager _navManager;
+@inject ICustomerService _custService;
+@inject IAddressService _addrService;
+@inject IJSRuntime js;
+@inject NavigationManager _navManager;
+
+<h2>Customer Info</h2>
+@if (ParametersSet)
+{
+    <EditForm Model="@customer" OnSubmit="AddCustomerSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+    <div class="row col-md-12 m-5">
+        <div class="col col-md-6 col-sm-12">
+                <div class="form-group">
+                <SfCheckBox Label="Name Style" @bind-Checked="@customer.NameStyle"/>
+            </div>
+                <div class="form-group">
+                <SfDropDownList AllowFiltering=true Placeholder="Tittle" DataSource="@tittles" Enabled="@Editcustomer" TItem="Tittle" FloatLabelType="FloatLabelType.Auto" TValue="string" @bind-Value="@customer.Title">
+                    <DropDownListFieldSettings Value="tName" Text="tName">
+                    </DropDownListFieldSettings>
+                </SfDropDownList>
+            </div>
+                <div class="form-group">
+                <SfTextBox Placeholder="First Name" @bind-Value="@customer.FirstName" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+                <div class="form-group">
+                <SfTextBox Placeholder="Last Name" @bind-Value="@customer.LastName" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+                <div class="form-group">
+                <SfTextBox Placeholder="Middle Name" @bind-Value="@customer.MiddleName" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="form-group">
+                <SfTextBox Placeholder="Suffix" @bind-Value="@customer.Suffix" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+        </div>
+        <div class="col col-md-6 col-sm-12">
+                <div class="form-group">
+                <SfTextBox Placeholder="Email" Type="InputType.Email" @bind-Value="@customer.EmailAddress" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+                <div class="form-group">
+                <SfTextBox Placeholder="Password" Type="InputType.Password" @bind-Value="@customer.PasswordHash" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+            <div class="form-group">
+                <SfTextBox Placeholder="Company Name" @bind-Value="@customer.CompanyName" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+                <div class="form-group">
+                <SfTextBox Placeholder="Phone" @bind-Value="@customer.Phone" Enabled="@Editcustomer" FloatLabelType="FloatLabelType.Auto" />
+            </div>
+        </div>
+    </div>
+        <div class="row buttons-row">
+            <div class="col col-md-3">
+                @if (Editcustomer)
+                {
+                    <SfButton Content="Save Customer" CssClass="e-success" />
+
+                }
+            </div>
+        </div>
+</EditForm>
+    <div class="row justify-content-center">
+        @if (!Editcustomer)
+        {
+            <div class="col col-md-3 m-1">
+                <SfButton Content="Edit Customer" CssClass="e-warning" OnClick="@(() => Editcustomer = !Editcustomer)" />
+            </div>
+
+            <div class="col col-md-3 m-1">
+                <SfButton Content="Delete Customer" CssClass="e-danger" OnClick="@(() => deletecustomerConfirmationVisible = true)" />
+            </div>
+        }
+        <div class="col col-md-3 m-1">
+            <SfButton Content="Back To List" CssClass="e-info" OnClick="@(() => _navManager.NavigateTo("Customers"))" />
+        </div>
+    </div>
+}
+else
+{
+    <SfSpinner @bind-Visible="@ShowSpinner" Type="@SpinnerType.Bootstrap">
+        Please Wait ...
+    </SfSpinner>
+}
+
+<SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@deletecustomerConfirmationVisible">
+    <DialogTemplates>
+        <Header> Confirm To delete customer !!! </Header>
+        <Content>
+            Do you really want to delete customer: @customer.FirstName ?
+        </Content>
+    </DialogTemplates>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
+    <DialogButtons>
+        <SfButton Content="Delete" CssClass="e-warning" OnClick="@ConfirmDelete" />
+        <SfButton Content="Cancel" CssClass="e-warning" OnClick="@(() => deletecustomerConfirmationVisible = false)" />
+    </DialogButtons>
+</SfDialog>
+
+<style>
+    .buttons-row {
+        margin: 5px;
+        padding: 10px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Customer customer { get; set; }
+    [Parameter]
+    public EventCallback ClosecustomerInfoDialog { get; set; }
+
+    public List<Address> customerAddresses { get; set; }
+
+    public bool deletecustomerConfirmationVisible { get; set; } = false;
+
+    public bool ShowSpinner { get; set; } = true;
+
+    List<Tittle> tittles { get; set; }
+
+    public bool ParametersSet { get; set; } = false;
+    public bool Editcustomer { get; set; } = false;
+    public bool IsNewCustomer { get; set; } = false;
+
+    public Customer customerBeforeUpdate { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        getTitles();
+    }
+
+    protected override async void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (customer != null)
+        {
+            customerBeforeUpdate = customer;
+            await GetCustomerAddresses(customer.CustomerID);
+        }
+        else
+        {
+            customer = new Customer();
+            Editcustomer = true;
+            IsNewCustomer = true;
+        }
+        ParametersSet = true;
+        StateHasChanged();
+    }
+
+    private async void ConfirmDelete()
+    {
+        var response = await _custService.Remove(customer.CustomerID);
+        await js.InvokeVoidAsync("alert", response.Message);
+        if (response.Status)
+        {
+            await ClosecustomerInfoDialog.InvokeAsync();
+            StateHasChanged();
+        }
+    }
+
+    public class Tittle
+    {
+        public string tName { get; set; }
+    }
+    private void getTitles()
+    {
+        tittles = new List<Tittle>();
+        tittles.Add(new Tittle { tName = "mr." });
+        tittles.Add(new Tittle { tName = "ms." });
+        tittles.Add(new Tittle { tName = "mss." });
+    }
+
+    private async void AddCustomerSubmit(EditContext context)
+    {
+        if(context.Validate())
+        {
+            if (!IsNewCustomer)
+            {
+                var response = await _custService.Update(customer);
+                await js.InvokeVoidAsync("alert", response.Message);
+                if (!response.Status)
+                {
+                    customer = customerBeforeUpdate;
+                }
+                else
+                {
+                    Editcustomer = false;
+                }
+            }
+            else
+            {
+                var response = await _custService.Create(customer);
+                await js.InvokeVoidAsync("alert", response.Message);
+                if (!response.Status)
+                {
+                    customer = customerBeforeUpdate;
+                }
+                else
+                {
+                    Editcustomer = false;
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetCustomerAddresses(int customerId)
+    {
+        AddressResponse addressResponse = new AddressResponse();
+        addressResponse = await _addrService.GetByCustomerId(customerId);
+        if(addressResponse.Status)
+        {
+            customerAddresses = addressResponse.Addresses.ToList();
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", addressResponse.Message);
+        }
+    }
+}

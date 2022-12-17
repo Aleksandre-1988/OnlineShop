@@ -10,6 +10,7 @@ namespace OnlineShop.Model
         public int AddressID { get; set; }
 
         [StringLength(50)]
+        [Required]
         public string AddressType { get; set; } = null!;
 
         public Guid rowguid { get; set; }

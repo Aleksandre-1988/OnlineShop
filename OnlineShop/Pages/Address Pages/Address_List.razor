@@ -1,0 +1,159 @@
+﻿@using Microsoft.Extensions.Localization
+@using OnlineShop.CustomResponses
+@using OnlineShop.Model
+@using OnlineShop.Services.Contracts
+@using System.Drawing
+@using System.Reflection
+
+@inject IAddressService _addressService;
+@inject IJSRuntime js;
+@inject NavigationManager _navManager;
+
+<div class="row align-items-center">
+    <h3>Addresss List</h3>
+</div>
+
+@if(addressList != null)
+{
+    <div class="row my-1">
+        <div class="col col-md-2">
+            <SfButton IconCss="e-icons e-circle-add" CssClass="e-success" Content="New Address" OnClick="@AddAddress" />
+        </div>
+    </div>
+    <SfGrid TValue="Address" DataSource="addressList" 
+        EnableHeaderFocus="true" 
+        AllowFiltering=true AllowResizing=true AllowPaging=true AllowSorting=true
+        Height="500" Width="100%"
+        Toolbar="@(new string[]{"Search"})"
+        >
+        <GridEvents CommandClicked="OnCommandClicked" OnActionComplete="OnActionComplete" TValue="Address"></GridEvents>
+        <GridEditSettings 
+            AllowAdding=true AllowDeleting=true 
+            AllowEditing=true AllowEditOnDblClick=true 
+            ShowDeleteConfirmDialog="true" Mode="EditMode.Normal"/>
+        
+        <GridColumns>
+            <GridColumn Field="@nameof(Address.AddressID)" IsPrimaryKey=true AllowAdding=false AllowEditing=false Width="100" IsIdentity=true Visible=false/>
+            <GridColumn Field="@nameof(Address.AddressLine1)" HeaderText="AddressLine1" AutoFit=true TextAlign="TextAlign.Left" />
+            <GridColumn Field="@nameof(Address.AddressLine2)" HeaderText="AddressLine2" AutoFit=true TextAlign="TextAlign.Left" />
+            <GridColumn Field="@nameof(Address.City)" HeaderText="City" AutoFit=true TextAlign="TextAlign.Left" />
+            <GridColumn Field="@nameof(Address.StateProvince)" HeaderText="StateProvince" AutoFit=true TextAlign="TextAlign.Left"/>
+            <GridColumn Field="@nameof(Address.CountryRegion)" HeaderText="Country" AutoFit=true TextAlign="TextAlign.Left"/>
+            <GridColumn HeaderText="Record Actions" Width="150">
+                <GridCommandColumns>
+                    <GridColumn HeaderText="Details" AllowSorting=false AllowFiltering=false 
+                                Width="80" TextAlign="TextAlign.Center"
+                                AllowEditing=false AllowAdding=false AllowSearching=false>
+                        <Template>
+                            @{
+                                var addr = (context as Address);
+
+                                <SfButton Content="" OnClick="@((args) => ShowAddrInfo_Click(args, addr))" IconCss="e-icons e-eye" CssClass="btn e-info"></SfButton>
+                            }
+                        </Template>
+                    </GridColumn>
+                    <GridCommandColumn Type="CommandButtonType.Edit" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-edit", CssClass = "btn e-warning" })"></GridCommandColumn>
+                    <GridCommandColumn Type="CommandButtonType.Delete" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-delete", CssClass = "btn e-danger" })"></GridCommandColumn>
+                    <GridCommandColumn Type="CommandButtonType.Save" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-update", CssClass = "btn e-success" })"></GridCommandColumn>
+                    <GridCommandColumn Type="CommandButtonType.Cancel" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-cancel-icon", CssClass = "btn" })"></GridCommandColumn>
+                </GridCommandColumns>
+         </GridColumn>
+        </GridColumns>
+               
+    </SfGrid>
+}
+else
+{
+    <SfSpinner @bind-Visible="@ShowSpinner" Type="@SpinnerType.Bootstrap">
+        Please Wait ...    
+    </SfSpinner>
+}
+
+<SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@addrInfoVisible">
+    <DialogTemplates>
+        <Header>Address Details</Header>
+        <Content> 
+            <Address_Details address="@selectedAddress" CloseAddressInfoDialog="@CloseaddrInfo" />
+        </Content>
+    </DialogTemplates>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
+    <DialogButtons>
+        <DialogButton Content="Hide" IsPrimary="true" OnClick="@CloseaddrInfo" />
+    </DialogButtons>
+</SfDialog>
+
+<style>
+    
+</style>
+
+@code {
+    public List<Address> addressList { get; set; }
+
+    private bool addrInfoVisible { get; set; } = false;
+
+    public Address selectedAddress { get; set; } = new Address();
+
+    public AddressResponse addrResponse { get; set; }
+
+    public bool ShowSpinner { get; set; } = true;
+
+    protected override async void OnInitialized()
+    {
+        base.OnInitialized();
+        await GetAddresss();
+    }
+
+    private async Task GetAddresss()
+    {
+        addrResponse = await _addressService.GetAll();
+        if(addrResponse.Status)
+        {
+            addressList = addrResponse.Addresses;
+            StateHasChanged();
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", addrResponse.Message);
+        }
+    }
+    public async void ShowAddrInfo_Click(MouseEventArgs args, Address addr)
+    {
+        selectedAddress = addr;
+        addrInfoVisible = true;
+    }
+
+    private void OnCommandClicked(CommandClickEventArgs<Address> args) => selectedAddress = args.RowData;
+
+    public async void OnActionComplete(ActionEventArgs<Address> arg)
+    {
+        //Handles save operation
+        if (arg.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            addrResponse = await _addressService.Update(arg.Data);
+            await js.InvokeVoidAsync("alert", addrResponse.Message);
+        }
+        //Handles delete operation
+        if (arg.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            addrResponse = await _addressService.Remove(arg.Data.AddressID);
+            await js.InvokeVoidAsync("alert", addrResponse.Message);
+        }
+    }
+
+    private void OpenaddrInfo()
+    {
+        this.addrInfoVisible = true;
+    }
+
+    private async void CloseaddrInfo()
+    {
+        this.addrInfoVisible = false;
+        await GetAddresss();
+    }
+
+    private void AddAddress()
+    {
+        selectedAddress = null;
+        addrInfoVisible = true;
+    }
+}

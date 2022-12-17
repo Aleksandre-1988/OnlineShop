@@ -1,6 +1,34 @@
 ﻿@page "/customers"
+@using OnlineShop.Pages.Customer_Pages
+@using OnlineShop.Pages.Address_Pages
+@using Syncfusion.Blazor.Navigations
 
-<h3>Customers</h3>
+<div class="container-fluid">
+    <SfTab Width="100%" Height="auto">
+        <TabItems>
+            <TabItem>
+                <ChildContent>
+                    
+                    <TabHeader Text="Customers List"></TabHeader>
+                </ChildContent>
+                <ContentTemplate>
+                    <Customer_List />
+                </ContentTemplate>
+            </TabItem>
+            <TabItem>
+                <ChildContent>
+
+                    <TabHeader Text="Addresses"></TabHeader>
+                </ChildContent>
+                <ContentTemplate>
+                    <Address_List />
+
+                </ContentTemplate>
+            </TabItem>
+        </TabItems>
+    </SfTab>
+</div>
+
 
 @code {
 

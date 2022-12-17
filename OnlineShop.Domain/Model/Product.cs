@@ -17,7 +17,6 @@ namespace OnlineShop.Domain.Model
     {
         public Product()
         {
-            SalesOrderDetails = new HashSet<SalesOrderDetail>();
         }
 
         /// <summary>

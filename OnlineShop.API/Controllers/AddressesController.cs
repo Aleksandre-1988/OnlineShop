@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using OnlineShop.Api.Model_Views;
+using OnlineShop.API.Extension;
+using OnlineShop.API.Model_Views;
 using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
 
@@ -11,20 +15,26 @@ namespace OnlineShop.API.Controllers
     public class AddressesController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;
+        private readonly IMapper _mapper;
+        private readonly ILogger<AddressesController> _logger;
 
-        public AddressesController(IUnitOfWork unit)
+        public AddressesController(IUnitOfWork unit, ILogger<AddressesController> logger, IMapper mapper)
         {
             this._unit = unit;
+            this._logger = logger;
+            this._mapper = mapper;
         }
+
         // GET: api/<AddressesController>
         [HttpGet]
         public IActionResult GetAll()
         {
             var addresses = _unit.addressRep.GetAll().ToList();
+            List<Address_View> address_Views = _mapper.Map<List<Address>, List<Address_View>>(addresses);
 
             if (addresses != null)
             {
-                return Ok(addresses);
+                return Ok(address_Views);
             }
             else
             {
@@ -33,14 +43,17 @@ namespace OnlineShop.API.Controllers
         }
 
         // GET api/<AddressesController>/5
-        [HttpGet("{id:int}")]
+        [HttpGet("GetByCustomerId/{id:int}")]
         public IActionResult Get(int id)
         {
-            var address = _unit.addressRep.Get(id);
+            List<Address> addresssList = _unit.addressRep.GetAddressListByCustomerId(id);
 
-            if (address != null)
+
+            if (addresssList != null)
             {
-                return Ok(address);
+                Address_View address_View = _mapper.Map<Address_View>(addresssList);
+
+                return Ok(address_View);
             }
             else
             {
@@ -49,20 +62,23 @@ namespace OnlineShop.API.Controllers
         }
 
         // POST api/<AddressesController>
-        [HttpPost]
-        public IActionResult Add([FromBody] Address addressToAdd)
+        [HttpPost("Add")]
+        public IActionResult Add([FromBody] Address addressViewToAdd)
         {
-            if (addressToAdd == null)
+            if (addressViewToAdd == null)
             {
                 return BadRequest();
             }
 
             try
             {
-                _unit.addressRep.Add(addressToAdd);
+                Address address = _mapper.Map<Address>(addressViewToAdd);
+                address.ModifiedDate = DateTime.Now;
+
+                _unit.addressRep.Add(address);
                 _unit.Save();
 
-                return Ok(addressToAdd);
+                return Ok(addressViewToAdd);
             }
             catch (Exception ex)
             {
@@ -70,22 +86,18 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // PUT api/<AddressesController>/5
-        [HttpPut]
-        public IActionResult Update([FromBody] Address addressToEdit)
+        // PUT api/<AddressesController>/Update
+        [HttpPut("Update")]
+        public IActionResult Update([FromBody] Address_View addressViewToEdit)
         {
-            var address = Get(addressToEdit.AddressID);
-
-            if (address == null)
-            {
-                return BadRequest();
-            }
-
             try
             {
-                _unit.addressRep.Update(addressToEdit);
+                Address address = _mapper.Map<Address>(addressViewToEdit);
+                address.ModifiedDate = DateTime.Now;
+
+                _unit.addressRep.Update(address);
                 _unit.Save();
-                return Ok(addressToEdit);
+                return Ok(addressViewToEdit);
             }
             catch (Exception ex)
             {
@@ -94,7 +106,7 @@ namespace OnlineShop.API.Controllers
         }
 
         // DELETE api/<AddressesController>/5
-        [HttpDelete("{id:int}")]
+        [HttpDelete("Remove/{id:int}")]
         public IActionResult Remove(int id)
         {
             var address = Get(id);

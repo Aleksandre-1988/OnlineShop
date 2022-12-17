@@ -1,0 +1,154 @@
+﻿@using OnlineShop.CustomResponses;
+@using OnlineShop.Model;
+@using OnlineShop.Services.Contracts;
+
+@inject ICustomerService _custService;
+@inject IJSRuntime js;
+
+<div class="row align-items-center">
+    <h3>Customers List</h3>
+</div>
+
+<div class="row my-1">
+    <div class="col col-md-2">
+        <SfButton IconCss="e-icons e-circle-add" CssClass="e-success" Content="New Customer" OnClick="@AddCustomer" />
+    </div>
+</div>
+@if(customerList != null)
+{
+    <SfGrid TValue="Customer" DataSource="customerList" EnableHeaderFocus="true"
+        AllowFiltering=true AllowResizing=true AllowPaging=true AllowSorting=true
+        Height="500" Width="100%"
+        Toolbar="@(new string[]{"Search"})">
+        <GridEvents CommandClicked="OnCommandClicked" OnActionComplete="OnActionComplete" TValue="Customer"></GridEvents>
+        <GridEditSettings AllowAdding=true AllowDeleting=true
+                      AllowEditing=true AllowEditOnDblClick=true
+                      ShowDeleteConfirmDialog="true" Mode="EditMode.Normal" />
+        <GridColumns>
+            <GridColumn Field="@nameof(Customer.CustomerID)" IsPrimaryKey=true IsIdentity=true AutoFit=true/>
+            <GridColumn Field="@nameof(Customer.Title)" HeaderText="Title" AutoFit=true/>
+            <GridColumn Field="@nameof(Customer.FirstName)" HeaderText="FirstName" AutoFit=true/>
+            <GridColumn Field="@nameof(Customer.LastName)" HeaderText="LastName" AutoFit=true />
+            <GridColumn Field="@nameof(Customer.MiddleName)" HeaderText="MiddleName" AutoFit=true />
+            <GridColumn Field="@nameof(Customer.Suffix)" HeaderText="Suffix" AutoFit=true />
+            <GridColumn Field="@nameof(Customer.EmailAddress)" HeaderText="Email" AutoFit=true />
+            <GridColumn Field="@nameof(Customer.CompanyName)" HeaderText="Company Name" AutoFit=true />
+            <GridColumn Field="@nameof(Customer.Phone)" HeaderText="Phone" AutoFit=true />
+            <GridColumn HeaderText="Record Actions" Width="150">
+            <GridCommandColumns>
+                <GridColumn HeaderText="Details" AllowSorting=false AllowFiltering=false
+                        Width="80" TextAlign="TextAlign.Center"
+                        AllowEditing=false AllowAdding=false AllowSearching=false>
+                    <Template>
+                        @{
+                            var cust = (context as Customer);
+
+                            <SfButton Content="" OnClick="@((args) => ShowCustInfo_Click(args, cust))" IconCss="e-icons e-eye" CssClass="btn e-info"></SfButton>
+                        }
+                    </Template>
+                </GridColumn>
+                <GridCommandColumn Type="CommandButtonType.Edit" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-edit", CssClass = "btn e-warning" })"></GridCommandColumn>
+                <GridCommandColumn Type="CommandButtonType.Delete" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-delete", CssClass = "btn e-danger" })"></GridCommandColumn>
+                <GridCommandColumn Type="CommandButtonType.Save" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-update", CssClass = "btn e-success" })"></GridCommandColumn>
+                <GridCommandColumn Type="CommandButtonType.Cancel" ButtonOption="@(new CommandButtonOptions() { IconCss = "e-icons e-cancel-icon", CssClass = "btn" })"></GridCommandColumn>
+            </GridCommandColumns>
+            </GridColumn>
+        </GridColumns>
+    </SfGrid>
+}
+else
+{
+    <SfSpinner @bind-Visible="@ShowSpinner" Type="@SpinnerType.Bootstrap">
+        Please Wait ...
+    </SfSpinner>
+}
+
+<SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@custInfoVisible">
+    <DialogTemplates>
+        <Header> Add / Edit Customer  </Header>
+        <Content> 
+            <Customer_Details customer="@selectedCustomer" ClosecustomerInfoDialog="@CloseCustInfo" />
+        </Content>
+    </DialogTemplates>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
+    <DialogButtons>
+        <DialogButton Content="Hide" IsPrimary="true" OnClick="@CloseCustInfo" />
+    </DialogButtons>
+</SfDialog>
+
+@code {
+    public List<Customer> customerList { get; set; }
+
+    public Customer selectedCustomer { get; set; } = new Customer();
+
+    public CustomerResponse custResponse { get; set; } = new CustomerResponse();
+
+
+    public bool ShowSpinner { get; set; } = true;
+
+    public bool custInfoVisible { get; set; } = false;
+
+    protected override async void OnInitialized()
+    {
+        base.OnInitialized();
+
+        await GetCustomers();
+
+    }
+
+    private async Task GetCustomers()
+    {
+        CustomerResponse customerResponse = await _custService.Take(10);
+
+        if(customerResponse.Status)
+        {
+            customerList = customerResponse.Customers.ToList();
+            StateHasChanged();
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", customerResponse.Message);
+        }
+    }
+
+    private void OpenCustInfo()
+    {
+        this.custInfoVisible = true;
+    }
+
+    private void CloseCustInfo()
+    {
+        this.custInfoVisible = false;
+    }
+
+    public async void ShowCustInfo_Click(MouseEventArgs args, Customer cust)
+    {
+        selectedCustomer = cust;
+        custInfoVisible = true;
+    }
+
+    private void OnCommandClicked(CommandClickEventArgs<Customer> args) => selectedCustomer = args.RowData;
+
+
+    public async void OnActionComplete(ActionEventArgs<Customer> arg)
+    {
+        //Handles save operation
+        if (arg.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            custResponse = await _custService.Update(arg.Data);
+            await js.InvokeVoidAsync("alert", custResponse.Message);
+        }
+        //Handles delete operation
+        if (arg.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            custResponse = await _custService.Remove(arg.Data.CustomerID);
+            await js.InvokeVoidAsync("alert", custResponse.Message);
+        }
+    }
+
+    private void AddCustomer()
+    {
+        selectedCustomer = null;
+        custInfoVisible = true;
+    }
+}

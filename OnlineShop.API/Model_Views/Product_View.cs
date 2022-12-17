@@ -38,5 +38,6 @@ namespace OnlineShop.Api.Model_Views
 
         public DateTime ModifiedDate { get; set; }
 
+        public int NumberOfOrders { get; set; }
     }
 }

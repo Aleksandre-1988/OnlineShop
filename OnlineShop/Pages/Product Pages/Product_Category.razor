@@ -1,5 +1,4 @@
-﻿@page "/test"
-@using OnlineShop.Model
+﻿@using OnlineShop.Model
 @using OnlineShop.Services.Contracts
 
 @inject IProductCategoryService _catService;
@@ -57,25 +56,23 @@ else
         {
             Categories = categoryResponse.ProductCategories.ToList();
             ParentCategories = Categories.Where(x => x.ParentProductCategoryID != null).ToList();
+            StateHasChanged();
         }
         else
         {
             await js.InvokeVoidAsync("alert",categoryResponse.Message);
         }
-        StateHasChanged();
     }
 
     public async void OnActionBegin(ActionEventArgs<ProductCategory> args)
     {
         if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Add")
         {
-            args.Data.ModifiedDate = DateTime.Now;
             var response = await _catService.Add(args.Data);
             await js.InvokeVoidAsync("alert", response.Message);
         }
         if (args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save) && args.Action == "Edit")
         {
-            args.Data.ModifiedDate = DateTime.Now;
             var response = await _catService.Edit(args.Data);
             await js.InvokeVoidAsync("alert", response.Message);
         }

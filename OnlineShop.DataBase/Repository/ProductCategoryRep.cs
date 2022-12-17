@@ -12,5 +12,7 @@ namespace OnlineShop.DAL.Repository
         {
             Context = context;
         }
+
+        
     }
 }

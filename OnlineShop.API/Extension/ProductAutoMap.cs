@@ -8,7 +8,9 @@ namespace OnlineShop.API.Extension
     {
         public ProductAutoMap()
         {
-            CreateMap<Product, Product_View>().ReverseMap(); //reverse so the both direction
+            CreateMap<Product, Product_View>()
+                .ForMember(dest => dest.NumberOfOrders, act => act.MapFrom(src => src.SalesOrderDetails.Count()))
+                .ReverseMap(); //reverse so the both direction
         }
     }
 }

@@ -7,16 +7,20 @@ namespace OnlineShop.Model
         public int ProductID { get; set; }
 
         [StringLength(50)]
+        [Required(ErrorMessage = "Product Name is required")]
         public string Name { get; set; } = null!;
 
         [StringLength(25)]
+        [Required(ErrorMessage = "Product Number is required")]
         public string ProductNumber { get; set; } = null!;
 
         [StringLength(15)]
         public string? Color { get; set; }
 
+        [Required(ErrorMessage = "Standard Cost is required")]
         public decimal StandardCost { get; set; }
 
+        [Required(ErrorMessage = "ListPrice is required")]
         public decimal ListPrice { get; set; }
 
         [StringLength(5)]

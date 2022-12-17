@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using OnlineShop.Api.Model_Views;
+using OnlineShop.API.Model_Views;
 using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
+using System.Reflection.Metadata;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -11,10 +15,14 @@ namespace OnlineShop.API.Controllers
     public class CustomerController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;
+        private readonly IMapper _mapper;
+        private readonly ILogger<CustomerController> _logger;
 
-        public CustomerController(IUnitOfWork unit)
+        public CustomerController(IUnitOfWork unit, IMapper mapper, ILogger<CustomerController> logger)
         {
             this._unit = unit;
+            this._mapper = mapper;
+            this._logger = logger;
         }
 
         // GET: api/<CustomerController>
@@ -41,7 +49,8 @@ namespace OnlineShop.API.Controllers
 
             if (customer != null)
             {
-                return Ok(customer);
+                Customer_View customer_View = _mapper.Map<Customer_View>(customer);
+                return Ok(customer_View);
             }
             else
             {
@@ -49,46 +58,62 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // POST api/<CustomerController>
-        [HttpPost]
-        public IActionResult Add([FromBody] Customer customerToAdd)
+        // GET: api/<CustomerController>/Take/5
+        [HttpGet]
+        [Route("Take/{rowCount:int}")]
+        public IActionResult Take(int rowCount = 10)//Default Take 10
         {
-            if (customerToAdd == null)
+            List<Customer> customerList = _unit.customerRep.Take(rowCount).ToList();
+            if (customerList != null)
+            {
+                List<Customer_View> customer_Views = _mapper.Map<List<Customer>, List<Customer_View>>(customerList);
+                return Ok(customer_Views);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        // POST api/<CustomerController>/Add
+        [HttpPost("Add")]
+        public IActionResult Add([FromBody] Customer customerViewToAdd)
+        {
+            if (customerViewToAdd == null)
             {
                 return BadRequest();
             }
 
             try
             {
-                _unit.customerRep.Add(customerToAdd);
+                Customer customer = _mapper.Map<Customer>(customerViewToAdd);
+                customer.ModifiedDate = DateTime.Now;
+
+                _unit.customerRep.Add(customer);
                 _unit.Save();
 
-                return Ok(customerToAdd);
+                return Ok(customer);
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, "Internal Server Error: Can't Save data into DataBase");
             }
         }
 
-        // PUT api/<CustomerController>/5
-        [HttpPut]
-        public IActionResult Update([FromBody] Customer customerToEdit)
+        // PUT api/<CustomerController>/
+        [HttpPut("Update")]
+        public IActionResult Update([FromBody] Customer customerViewToEdit)
         {
-            var customer = Get(customerToEdit.CustomerID);
-
-            if (customer == null)
-            {
-                return BadRequest();
-            }
-
             try
             {
-                _unit.customerRep.Update(customerToEdit);
+                Customer customer = _mapper.Map<Customer>(customerViewToEdit);
+                customer.ModifiedDate = DateTime.Now;
+
+                _unit.customerRep.Update(customer);
                 _unit.Save();
-                return Ok(customerToEdit);
+                return Ok(customerViewToEdit);
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, "Internal Server Error: Can't Update data into DataBase");
             }
@@ -98,7 +123,7 @@ namespace OnlineShop.API.Controllers
         [HttpDelete("{id:int}")]
         public IActionResult Remove(int id)
         {
-            var customer = Get(id);
+            var customer = _unit.customerRep.Get(id);
 
             if (customer == null)
             {

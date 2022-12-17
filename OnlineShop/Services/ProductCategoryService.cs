@@ -32,14 +32,14 @@ namespace OnlineShop.Services
             ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
             string endpoint = $"{_url}/ProductCategory/Add";
 
-            HttpResponseMessage httpResponse = await httpClient.PostAsJsonAsync(endpoint, productCategoryToAdd);
+            HttpResponseMessage httpResponse = await httpClient.PostAsJsonAsync(endpoint, productCategoryToAdd, _serializerOptions);
 
             if (httpResponse.IsSuccessStatusCode)
             {
                 string content = await httpResponse.Content.ReadAsStringAsync();
 
-                prodCategoryResponse.Message = content;
                 prodCategoryResponse.Status = true;
+                prodCategoryResponse.Message = "Product Category Added";
 
                 return prodCategoryResponse;
             }
@@ -76,13 +76,21 @@ namespace OnlineShop.Services
 
                 return prodCategoryResponse;
             }
+            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                return new ProductCategoryResponse
+                {
+                    Status = false,
+                    Message = $"Product Category with ID: {id} can not remove Parent Category",
+                };
+            }
             else
             {
                 return new ProductCategoryResponse
                 {
                     Status = false,
                     Message = $"Product Category with ID: {id} Could not Deleted",
-            };
+                };
             }
         }
 
@@ -91,13 +99,11 @@ namespace OnlineShop.Services
             ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
             string endpoint = $"{_url}/ProductCategory/Update";
 
-            HttpResponseMessage httpResponse = await httpClient.PutAsJsonAsync(endpoint, productCategoryToEdit);
+            HttpResponseMessage httpResponse = await httpClient.PutAsJsonAsync(endpoint, productCategoryToEdit, _serializerOptions);
 
             if (httpResponse.IsSuccessStatusCode)
             {
-                string content = await httpResponse.Content.ReadAsStringAsync();
-
-                prodCategoryResponse.Message = content;
+                prodCategoryResponse.Message = "Product Category Added";
                 prodCategoryResponse.Status = true;
 
                 return prodCategoryResponse;

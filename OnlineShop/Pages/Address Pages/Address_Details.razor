@@ -1,0 +1,172 @@
+﻿@using OnlineShop.CustomResponses;
+@using OnlineShop.Model;
+@using OnlineShop.Services.Contracts;
+@using Syncfusion.Blazor.Cards;
+
+@inject NavigationManager _navManager;
+@inject IAddressService _prodService;
+@inject IJSRuntime js;
+@inject NavigationManager _navManager;
+
+<h2>Address Info</h2>
+@if(ParametersSet)
+{
+    <EditForm Model="@address" OnSubmit="AddAddressSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="row col-md-12 m-3">
+            <div class="col col-md-6 col-sm-12">
+                <div class="form-group">
+                    <SfTextBox Placeholder="Address Line1" @bind-Value="address.AddressLine1" Enabled="@EditAddress" FloatLabelType="FloatLabelType.Auto" />
+                </div>
+                <div class="form-group">
+                    <SfTextBox Placeholder="Address Line2" @bind-Value="address.AddressLine2" Enabled="@EditAddress" FloatLabelType="FloatLabelType.Auto" />
+                </div>
+                <div class="form-group">
+                    <SfTextBox Placeholder="City" @bind-Value="address.City" Enabled="@EditAddress" FloatLabelType="FloatLabelType.Auto" />
+                </div>
+            </div>
+            <div class="col col-md-6 col-sm-12">
+                <div class="form-group">
+                    <SfTextBox Placeholder="State" @bind-Value="address.StateProvince" Enabled="@EditAddress" FloatLabelType="FloatLabelType.Auto" />
+                </div>
+                <div class="form-group">
+                    <SfTextBox Placeholder="Country" @bind-Value="address.CountryRegion" Enabled="@EditAddress" FloatLabelType="FloatLabelType.Auto" />
+                </div>
+                <div class="form-group">
+                    <SfTextBox Placeholder="Postal Code" @bind-Value="address.PostalCode" Enabled="@EditAddress" FloatLabelType="FloatLabelType.Auto" />
+                </div>
+            </div>
+        </div>
+        <div class="row buttons-row">
+            <div class="col col-md-3">
+                @if (EditAddress)
+                {
+                    <SfButton Content="Save Address" CssClass="e-success" />
+                }
+            </div>
+        </div>
+    </EditForm>
+    <div class="row justify-content-center">
+         @if (!EditAddress)
+            {
+                <div class="col col-md-3 m-1">
+                    <SfButton Content="Edit Address" CssClass="e-warning" OnClick="@(() => EditAddress = !EditAddress)" />
+                </div>
+
+                <div class="col col-md-3 m-1">
+                    <SfButton Content="Delete Address" CssClass="e-danger" OnClick="@(() => deleteAddressConfirmationVisible = true)" />
+                </div>
+            }
+        <div class="col col-md-3 m-1">
+            <SfButton Content="Back To List" CssClass="e-info" OnClick="@(() => _navManager.NavigateTo("Customers"))" />
+        </div>
+    </div>
+}
+else
+{
+    <SfSpinner @bind-Visible="@ShowSpinner" Type="@SpinnerType.Bootstrap">
+        Please Wait ...    
+    </SfSpinner>
+}
+
+
+<SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@deleteAddressConfirmationVisible">
+    <DialogTemplates>
+        <Header> Confirm To delete Address !!! </Header>
+        <Content>
+            Do you really want to delete Address?
+        </Content>
+    </DialogTemplates>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
+    <DialogButtons>
+        <DialogButton Content="Delete" IsPrimary="true" OnClick="@ConfirmDelete" />
+        <DialogButton Content="Cancel" CssClass="e-warning" OnClick="@(() => deleteAddressConfirmationVisible = false)" />
+    </DialogButtons>
+</SfDialog>
+
+<style>
+    .buttons-row {
+        margin: 5px;
+        padding: 10px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public Address address { get; set; }
+    [Parameter]
+    public EventCallback CloseAddressInfoDialog { get; set; }
+
+    public Address addressBeforeUpdate { get; set; }
+
+    public bool IsNewAddress { get; set; } = false;
+    public bool EditAddress { get; set; } = false;
+    public bool deleteAddressConfirmationVisible { get; set; } = false;
+    public bool ShowSpinner { get; set; } = true;
+    public bool ParametersSet { get; set; } = false;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if(address != null)
+        {
+            addressBeforeUpdate = address;
+        }
+        else
+        {
+            address = new Address();
+            EditAddress = true;
+            IsNewAddress = true;
+        }
+        ParametersSet = true;
+        StateHasChanged();
+    }
+
+    private async void AddAddressSubmit(EditContext context)
+    {
+        if(context.Validate())
+        {
+            if (!IsNewAddress)
+            {
+                var response = await _prodService.Update(address);
+                await js.InvokeVoidAsync("alert", response.Message);
+                if (!response.Status)
+                {
+                    address = addressBeforeUpdate;
+                }
+                else
+                {
+                    EditAddress = false;
+                }
+                StateHasChanged();
+            }
+            else
+            {
+                var response = await _prodService.Create(address);
+                await js.InvokeVoidAsync("alert", response.Message);
+                if (!response.Status)
+                {
+                    address = addressBeforeUpdate;
+                }
+                else
+                {
+                    EditAddress = false;
+                }
+                StateHasChanged();
+            }
+        }
+
+    }
+
+    private async void ConfirmDelete()
+    {
+        var response = await _prodService.Remove(address.AddressID);
+        await js.InvokeVoidAsync("alert", response.Message);
+        if (response.Status)
+        {
+            await CloseAddressInfoDialog.InvokeAsync();
+            StateHasChanged();
+        }
+    }
+}

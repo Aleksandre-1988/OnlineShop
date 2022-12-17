@@ -9,10 +9,16 @@
 @inject IJSRuntime js;
 @inject NavigationManager _navManager;
 
-<h2>Product Info</h2>
-@if(product != null && productModelList !=null && productCategoryList !=null)
+<div class="row text-center">
+    <h3>@pageHeader</h3>
+</div>
+
+@if(ParametersSet)
 {
-    <div class="row col-md-6 m-5">
+    <EditForm Model="@product" OnSubmit="AddProductSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="row col-md-12 m-3">
         <div class="row m-1 p-1">
             <div class="col col-md-7">
                     @{
@@ -21,27 +27,27 @@
                         {
                             string base64String = Convert.ToBase64String(bytes, 0, bytes.Length);
                             imgSrc = $"data:image/png;base64,{base64String}";
-                            <SfCard>
-                                <CardHeader SubTitle="@product.ThumbnailPhotoFileName"></CardHeader>
-                                <CardContent>
-                                    <div class="photo">
-                                        <img src=@imgSrc class="img-thumbnail" />
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                <div class="input-group">
-                                    <div class="custom-file">
-                                        <div>
-                                        @if(EditProduct)
-                                            {
-                                                <InputFile OnChange="@OnFileSelection"></InputFile>
-                                            }
-                                        </div>
+                        }
+                        <SfCard>
+                            <CardHeader SubTitle="@product.ThumbnailPhotoFileName"></CardHeader>
+                            <CardContent>
+                                <div class="photo">
+                                    <img src=@imgSrc class="img-thumbnail" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                            <div class="input-group">
+                                <div class="custom-file">
+                                    <div>
+                                    @if(EditProduct)
+                                        {
+                                            <InputFile OnChange="@OnFileSelection"></InputFile>
+                                        }
                                     </div>
                                 </div>
-                                </CardFooter>
-                            </SfCard>
-                        }
+                            </div>
+                            </CardFooter>
+                        </SfCard>
                     }
             </div>
             <div class="col col-md-3">
@@ -94,24 +100,29 @@
                 <SfDatePicker TValue="DateTime" Placeholder="Product Modified Date" @bind-Value="@product.ModifiedDate" Enabled=false ValidateOnInput=true FloatLabelType="FloatLabelType.Always" />
             </div>
         </div>
-    </div>
-    <div class="row buttons-row">
-        <div class="col col-md-3">
-            @if (!EditProduct)
-            {
-                <SfButton Content="Edit Product" CssClass="e-warning" OnClick="@(() => EditProduct = !EditProduct)"/>
-            }
-            else
-            {
-                <SfButton Content="Save Product" CssClass="e-success" OnClick="@UpdateProduct" />
-
-            }
-        </div> 
-        <div class="col col-md-3">
-            <SfButton Content="Delete Product" CssClass="e-danger" OnClick="@(() => deleteProductConfirmationVisible = true)" />
         </div>
-        <div class="col col-md-3">
-            <SfButton Content="Reset" CssClass="e-info" OnClick="@(() => product = productBeforeUpdate)" />
+        <div class="row buttons-row">
+            <div class="col col-md-3">
+                @if (EditProduct)
+                {
+                    <SfButton Content="Save Product" CssClass="e-success" />
+                }
+            </div>
+        </div>
+</EditForm>
+    <div class="row justify-content-center">
+        @if (!EditProduct)
+        {
+            <div class="col col-md-3 m-1">
+                <SfButton Content="Edit Product" CssClass="e-warning" OnClick="@(() => EditProduct = !EditProduct)" />
+            </div>
+
+            <div class="col col-md-3 m-1">
+                <SfButton Content="Delete Product" CssClass="e-danger" OnClick="@(() => deleteProductConfirmationVisible = true)" />
+            </div>
+        }
+        <div class="col col-md-3 m-1">
+            <SfButton Content="Back To List" CssClass="e-info" OnClick="@(() => _navManager.NavigateTo("Products"))" />
         </div>
     </div>
 }
@@ -125,14 +136,14 @@ else
 <SfDialog Width="auto" Height="auto" ShowCloseIcon="true" @bind-Visible="@deleteProductConfirmationVisible">
     <DialogTemplates>
         <Header> Confirm To delete Product !!! </Header>
-        <Content> 
-            Do you really want to delete Product: @product.Name ?
+        <Content>
+            Do you really want to delete Product?
         </Content>
     </DialogTemplates>
     <DialogAnimationSettings Effect="DialogEffect.Zoom" Duration=600 />
     <DialogButtons>
-        <SfButton Content="Delete" CssClass="e-warning" OnClick="@ConfirmDelete" />
-        <SfButton Content="Cancel" CssClass="e-warning" OnClick="@(() => deleteProductConfirmationVisible = false)" />
+        <DialogButton Content="Delete" CssClass="e-warning" OnClick="@ConfirmDelete" />
+        <DialogButton Content="Cancel" CssClass="e-warning" OnClick="@(() => deleteProductConfirmationVisible = false)" />
     </DialogButtons>
 </SfDialog>
 
@@ -154,10 +165,13 @@ else
     public EventCallback CloseProductInfoDialog { get; set; }
 
     public Product productBeforeUpdate { get; set; }
+    public string pageHeader { get; set; } = "Product Details";
 
     public bool EditProduct { get; set; } = false;
     public bool deleteProductConfirmationVisible { get; set; } = false;
     public bool ShowSpinner { get; set; } = true;
+    public bool ParametersSet { get; set; } = false;
+    public bool IsNewProduct { get; set; } = false;
 
     public string imgUrl { get; set; } = string.Empty;
     public string imgSrc { get; set; } = string.Empty;
@@ -165,22 +179,57 @@ else
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        productBeforeUpdate = product;
-    }
-
-    private async void UpdateProduct()
-    {
-        var response = await _prodService.Update(product);
-        await js.InvokeVoidAsync("alert", response.Message);
-        if (!response.Status)
+        if (product != null)
         {
-            product = productBeforeUpdate;
+            productBeforeUpdate = product;
+
         }
         else
         {
-            EditProduct = false;
+            product = new Product();
+            EditProduct = true;
+            IsNewProduct = true;
+            pageHeader = "Add Product";
         }
+        ParametersSet = true;
         StateHasChanged();
+    }
+
+    private async void AddProductSubmit(EditContext context)
+    {
+        if(context.Validate())
+        {
+            if (!IsNewProduct)
+            {
+
+                var response = await _prodService.Update(product);
+                await js.InvokeVoidAsync("alert", response.Message);
+                if (!response.Status)
+                {
+                    product = productBeforeUpdate;
+                }
+                else
+                {
+                    EditProduct = false;
+                }
+                StateHasChanged();
+            }
+            else
+            {
+
+                var response = await _prodService.Create(product);
+                await js.InvokeVoidAsync("alert", response.Message);
+                if (!response.Status)
+                {
+                    product = productBeforeUpdate;
+                }
+                else
+                {
+                    EditProduct = false;
+                }
+                StateHasChanged();
+            }
+        }
     }
 
     private async void ConfirmDelete()
@@ -192,6 +241,7 @@ else
             await CloseProductInfoDialog.InvokeAsync();
             StateHasChanged();
         }
+        deleteProductConfirmationVisible = false;
     }
 
     private async Task OnFileSelection(InputFileChangeEventArgs e)

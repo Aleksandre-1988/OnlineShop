@@ -2,10 +2,10 @@
 
 namespace OnlineShop.CustomResponses
 {
-    public class ProductCategoryResponse
+    public class AddressResponse
     {
-        public List<ProductCategory>? ProductCategories {get;set;}
-        public ProductCategory? ProductCategory {get;set;}
+        public List<Address?> Addresses { get; set; }
+        public Address? Address { get; set; }
         public bool Status { get; set; }
         public string? Message { get; set; }
     }
