@@ -47,9 +47,7 @@ namespace OnlineShop.Model
 
         public DateTime ModifiedDate { get; set; }
 
-        public int NumberOfOrders { get; set; }
-
-        public virtual IEnumerable<ProductCategory> ProductCategories { get; set; }
+        public virtual int NumberOfOrders { get; set; }
 
     }
 }

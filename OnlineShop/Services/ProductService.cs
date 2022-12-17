@@ -1,7 +1,7 @@
-﻿using OnlineShop.Services.Contracts;
+﻿using OnlineShop.CustomResponses;
 using OnlineShop.Model;
+using OnlineShop.Services.Contracts;
 using System.Text.Json;
-using OnlineShop.CustomResponses;
 
 namespace OnlineShop.Services
 {
@@ -11,11 +11,13 @@ namespace OnlineShop.Services
         private readonly string _url;
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ProductService> _logger;
 
-        public ProductService(HttpClient httpClient, IConfiguration configuration)
+        public ProductService(HttpClient httpClient, IConfiguration configuration, ILogger<ProductService> _logger)
         {
             this.httpClient = httpClient;
             this._configuration = configuration;
+            this._logger = _logger;
 
             _url = _configuration.GetValue<string>("API:URL");
 
@@ -40,31 +42,27 @@ namespace OnlineShop.Services
                 prodResponse.Product = JsonSerializer.Deserialize<Product>(content, _serializerOptions);
                 prodResponse.Status = true;
 
-                return prodResponse;
             }
             else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                return new ProductResponse
-                {
-                    Status = false,
-                    Message = "Product you looking for, Does not exists"
-                };
+                prodResponse.Status = false;
+                prodResponse.Message = "Product you looking for, Does not exists";
             }
             else
             {
-                return new ProductResponse
-                {
-                    Status = false,
-                    Message = httpResponse.StatusCode +": Error",
-                };
+                prodResponse.Status = false;
+                prodResponse.Message = httpResponse.StatusCode + ": Error";
             }
+
+            LogInformation(prodResponse.Message);
+            return prodResponse;
         }
 
         public async Task<ProductResponse> Take(int maxId = 1000)
         {
             ProductResponse prodResponse = new ProductResponse();
             string endpoint = $"{_url}/Product/Take/{maxId}";
-            
+
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -76,7 +74,7 @@ namespace OnlineShop.Services
 
                 return prodResponse;
             }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return new ProductResponse
                 {
@@ -98,7 +96,7 @@ namespace OnlineShop.Services
         {
             ProductResponse prodResponse = new ProductResponse();
             string endpoint = $"{_url}/Product";
-            
+
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -110,7 +108,7 @@ namespace OnlineShop.Services
 
                 return prodResponse;
             }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return new ProductResponse
                 {
@@ -132,7 +130,7 @@ namespace OnlineShop.Services
         {
             ProductCategoryResponse prodCategoryResponse = new ProductCategoryResponse();
             string endpoint = $"{_url}/Product/Categories/GetAll";
-            
+
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -144,7 +142,7 @@ namespace OnlineShop.Services
 
                 return prodCategoryResponse;
             }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return new ProductCategoryResponse
                 {
@@ -166,7 +164,7 @@ namespace OnlineShop.Services
         {
             ProductModelResponse prodModelResponse = new ProductModelResponse();
             string endpoint = $"{_url}/ProductModel";
-            
+
             HttpResponseMessage httpResponse = await httpClient.GetAsync(endpoint);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -178,7 +176,7 @@ namespace OnlineShop.Services
 
                 return prodModelResponse;
             }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return new ProductModelResponse
                 {
@@ -200,8 +198,8 @@ namespace OnlineShop.Services
         {
             ProductResponse prodResponse = new ProductResponse();
             string endpoint = $"{_url}/Product/Update";
-            
-            HttpResponseMessage httpResponse = await httpClient.PostAsJsonAsync(endpoint, productToEdit, _serializerOptions);
+
+            HttpResponseMessage httpResponse = await httpClient.PutAsJsonAsync(endpoint, productToEdit, _serializerOptions);
 
             if (httpResponse.IsSuccessStatusCode)
             {
@@ -213,7 +211,7 @@ namespace OnlineShop.Services
 
                 return prodResponse;
             }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 return new ProductResponse
                 {
@@ -235,25 +233,18 @@ namespace OnlineShop.Services
         {
             ProductResponse prodResponse = new ProductResponse();
             string endpoint = $"{_url}/Product/Add";
-            
-            HttpResponseMessage httpResponse = await httpClient.PostAsJsonAsync(endpoint,productToAdd,_serializerOptions);
+
+            HttpResponseMessage httpResponse = await httpClient.PostAsJsonAsync(endpoint, productToAdd, _serializerOptions);
 
             if (httpResponse.IsSuccessStatusCode)
             {
                 string content = await httpResponse.Content.ReadAsStringAsync();
 
                 prodResponse.Product = JsonSerializer.Deserialize<Product>(content);
+                prodResponse.Message = "Product Successfully Created";
                 prodResponse.Status = true;
 
                 return prodResponse;
-            }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                return new ProductResponse
-                {
-                    Status = false,
-                    Message = "Product you are Adding, Does not meet requrements"
-                };
             }
             else
             {
@@ -269,7 +260,7 @@ namespace OnlineShop.Services
         {
             ProductResponse prodResponse = new ProductResponse();
             string endpoint = $"{_url}/Product/Remove/{productIdToDelete}";
-            
+
             HttpResponseMessage httpResponse = await httpClient.DeleteAsync(endpoint);
 
             if (httpResponse.IsSuccessStatusCode)
@@ -281,7 +272,7 @@ namespace OnlineShop.Services
 
                 return prodResponse;
             }
-            else if(httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
+            else if (httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
                 string content = await httpResponse.Content.ReadAsStringAsync();
                 int orderCount = JsonSerializer.Deserialize<int>(content);
@@ -289,7 +280,7 @@ namespace OnlineShop.Services
                 {
 
                     Status = false,
-                    Message = "Product Can Not be deleted, Here is: "+orderCount+" Sales Order, related to this product"
+                    Message = "Product Can Not be deleted, Here is: " + orderCount + " Sales Order, related to this product"
                 };
             }
             else
@@ -300,6 +291,32 @@ namespace OnlineShop.Services
                     Message = httpResponse.ReasonPhrase
                 };
             }
+        }
+
+        public async Task<ProductResponse> ProdNameExists(string prodName)
+        {
+            ProductResponse prodResponse = new ProductResponse();
+            string endpoint = $"{_url}/Product/Checkname";
+
+            HttpResponseMessage httpResponse = await httpClient.PostAsJsonAsync(endpoint, prodName, _serializerOptions);
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                string content = await httpResponse.Content.ReadAsStringAsync();
+                prodResponse.Status = JsonSerializer.Deserialize<int>(content) == 1 ? true : false;
+                return prodResponse;
+            }
+            else
+            {
+                _logger.LogInformation("Error in ProductService: Cant execute CheckProdName()");
+
+                return null;
+            }
+
+        }
+
+        private void LogInformation(string message)
+        {
+            _logger.LogInformation(DateTime.Now.ToLongTimeString() + ": " + message);
         }
     }
 }

@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineShop.DAL", "OnlineSho
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineShop.API", "OnlineShop.API\OnlineShop.API.csproj", "{2C5A428B-A0EE-459E-BAC2-605D249EE516}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineShop.APP", "OnlineShop.APP\OnlineShop.APP.csproj", "{77438955-A4AC-490F-93AC-FD25EC5E0F00}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineShop.Domain", "OnlineShop.Domain\OnlineShop.Domain.csproj", "{A5DD7ABA-2098-4CC6-8F53-17AF1F656C72}"
 EndProject
 Global
@@ -31,10 +29,6 @@ Global
 		{2C5A428B-A0EE-459E-BAC2-605D249EE516}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C5A428B-A0EE-459E-BAC2-605D249EE516}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C5A428B-A0EE-459E-BAC2-605D249EE516}.Release|Any CPU.Build.0 = Release|Any CPU
-		{77438955-A4AC-490F-93AC-FD25EC5E0F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{77438955-A4AC-490F-93AC-FD25EC5E0F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{77438955-A4AC-490F-93AC-FD25EC5E0F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{77438955-A4AC-490F-93AC-FD25EC5E0F00}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A5DD7ABA-2098-4CC6-8F53-17AF1F656C72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A5DD7ABA-2098-4CC6-8F53-17AF1F656C72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5DD7ABA-2098-4CC6-8F53-17AF1F656C72}.Release|Any CPU.ActiveCfg = Release|Any CPU

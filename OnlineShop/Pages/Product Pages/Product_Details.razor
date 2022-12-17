@@ -37,11 +37,11 @@
                             </CardContent>
                             <CardFooter>
                             <div class="input-group">
-                                <div class="custom-file">
+                                <div class="row m-2">
                                     <div>
                                     @if(EditProduct)
                                         {
-                                            <InputFile OnChange="@OnFileSelection"></InputFile>
+                                            <InputFile OnChange="@OnFileSelection" accept=".jpg,.png"></InputFile>
                                         }
                                     </div>
                                 </div>
@@ -51,7 +51,7 @@
                     }
             </div>
             <div class="col col-md-3">
-                <SfColorPicker Disabled="@(!EditProduct)" @bind-Value="@product.Color"> Product Color</SfColorPicker>
+                <SfColorPicker Disabled="@(!EditProduct)" @bind-Value="@product.Color" Selected="@((arg) => product.Color = arg.CurrentValue.Rgba)"> Product Color</SfColorPicker>
             </div>
             </div>
             <div class="col col-md-6 col-sm-12">
@@ -197,38 +197,44 @@ else
 
     private async void AddProductSubmit(EditContext context)
     {
-        if(context.Validate())
+        var prodResponse = await _prodService.ProdNameExists(product.Name);
+        if(prodResponse != null && prodResponse.Status)
         {
-            if (!IsNewProduct)
+            if(context.Validate())
             {
-
-                var response = await _prodService.Update(product);
-                await js.InvokeVoidAsync("alert", response.Message);
-                if (!response.Status)
+                if (!IsNewProduct)
                 {
-                    product = productBeforeUpdate;
+                    var response = await _prodService.Update(product);
+                    await js.InvokeVoidAsync("alert", response.Message);
+                    if (!response.Status)
+                    {
+                        product = productBeforeUpdate;
+                    }
+                    else
+                    {
+                        EditProduct = false;
+                    }
+                    StateHasChanged();
                 }
                 else
                 {
-                    EditProduct = false;
+                    var response = await _prodService.Create(product);
+                    await js.InvokeVoidAsync("alert", response.Message);
+                    if (!response.Status)
+                    {
+                        product = productBeforeUpdate;
+                    }
+                    else
+                    {
+                        EditProduct = false;
+                    }
+                    StateHasChanged();
                 }
-                StateHasChanged();
             }
-            else
-            {
-
-                var response = await _prodService.Create(product);
-                await js.InvokeVoidAsync("alert", response.Message);
-                if (!response.Status)
-                {
-                    product = productBeforeUpdate;
-                }
-                else
-                {
-                    EditProduct = false;
-                }
-                StateHasChanged();
-            }
+        }
+        else if(prodResponse != null && !prodResponse.Status)
+        {
+            await js.InvokeVoidAsync("alert","Product With The same name exists");
         }
     }
 
@@ -244,13 +250,18 @@ else
         deleteProductConfirmationVisible = false;
     }
 
+    string[] imageTypes = new[] { "image.jpeg", "image/png" };
     private async Task OnFileSelection(InputFileChangeEventArgs e)
     {
-        IBrowserFile imgFile = e.File;
-        var buffers = new byte[imgFile.Size];
-        await imgFile.OpenReadStream().ReadAsync(buffers);
-        product.ThumbNailPhoto = buffers;
-        string imageType = imgFile.ContentType;
-        imgUrl = $"data:{imageType};base64,{Convert.ToBase64String(buffers)}";
+        if (imageTypes.Contains(e.File.ContentType))
+        {
+            var resized = await e.File.RequestImageFileAsync(e.File.ContentType, 300, int.MaxValue);
+            var buffers = new byte[resized.Size];
+            await resized.OpenReadStream().ReadAsync(buffers);
+            product.ThumbNailPhoto = buffers;
+            string imageType = resized.ContentType;
+            imgUrl = $"data:{imageType};base64,{Convert.ToBase64String(buffers)}";
+        }
+        StateHasChanged();
     }
 }

@@ -3,6 +3,7 @@ using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
 using OnlineShop.API.Model_Views;
 using AutoMapper;
+using OnlineShop.API.Filters;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -10,6 +11,7 @@ namespace OnlineShop.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Log]
     public class ProductCategoryController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;

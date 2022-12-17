@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using OnlineShop.Api.Model_Views;
-using OnlineShop.API.Extension;
+using OnlineShop.API.Filters;
 using OnlineShop.API.Model_Views;
 using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
@@ -12,6 +11,7 @@ namespace OnlineShop.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Log]
     public class AddressesController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;

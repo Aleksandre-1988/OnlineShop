@@ -89,7 +89,7 @@
                                            ForeignKeyField="ProductModelID"
                                            AutoFit=true>
             </GridForeignColumn>
-            <GridColumn Field="@nameof(Product.NumberOfOrders)" HeaderText="Total Orders" AutoFit=true TextAlign="TextAlign.Center" />
+            <GridColumn Field="@nameof(Product.NumberOfOrders)" HeaderText="Total Orders" AutoFit=true AllowEditing="false" TextAlign="TextAlign.Center" />
             <GridColumn HeaderText="Record Actions" Width="150">
             <GridCommandColumns>
                 <GridColumn HeaderText="Details" AllowSorting=false AllowFiltering=false 

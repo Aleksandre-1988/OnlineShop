@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OnlineShop.API.Filters;
 using OnlineShop.Domain.Interface;
 using OnlineShop.Domain.Model;
 
@@ -8,6 +9,7 @@ namespace OnlineShop.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Log]
     public class ProductModelController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;

@@ -3,11 +3,13 @@ using OnlineShop.Domain.Interface;
 using OnlineShop.Api.Model_Views;
 using OnlineShop.Domain.Model;
 using AutoMapper;
+using OnlineShop.API.Filters;
 
 namespace OnlineShop.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Log]
     public class ProductController : ControllerBase
     {
         protected readonly IUnitOfWork _unit;
@@ -21,7 +23,7 @@ namespace OnlineShop.API.Controllers
             this._logger = logger;
         }
 
-        // GET: api/<ProductController>/Take/5
+        // GET: api/<Product>/Take/{maxid}
         [HttpGet]
         [Route("Take/{rowCount:int}")]
         public IActionResult Take(int maxId = 1000 )//Default Take 10
@@ -41,12 +43,12 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // GET: api/<ProductController>
+        // GET: api/<Product>
         [HttpGet]
         public IActionResult GetAll()
         {
             List<Product> productList = _unit.productRep
-                .Find(x => x.ProductID < 1000, null, "SalesOrderDetails")
+                .Find(x => x.ProductID < 1000, null, "SalesOrderDetails") // Include Sales Order Details for count
                 .ToList();
 
             if (productList != null)
@@ -61,7 +63,7 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // GET api/<ProductController>/5
+        // GET api/<Product>/5
         [HttpGet("{id:int}")]
         public IActionResult Get(int id)
         {
@@ -78,9 +80,9 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // POST api/<ProductController>/Add
+        // POST api/<Product>/Add
         [HttpPost("Add")]
-        public IActionResult Add([FromBody] Product productToAdd)
+        public IActionResult Add([FromBody] Product_View productToAdd)
         {
             if (productToAdd == null)
             {
@@ -91,6 +93,7 @@ namespace OnlineShop.API.Controllers
             {
                 Product product = _mapper.Map<Product>(productToAdd);
                 product.ModifiedDate = DateTime.Now;
+
                 _unit.productRep.Add(product);
                 _unit.Save();
 
@@ -102,9 +105,9 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // POST api/<ProductController>/Update
-        [HttpPost("Update")]
-        public IActionResult Update([FromBody] Product productToEdit)
+        // POST api/<Product>/Update
+        [HttpPut("Update")]
+        public IActionResult Update([FromBody] Product_View productToEdit)
         {
             try
             {
@@ -120,7 +123,7 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // DELETE api/<ProductController>/Remove/5
+        // DELETE api/<Product>/Remove/5
         [HttpDelete("Remove/{id:int}")]
         public IActionResult Remove(int id)
         {
@@ -144,7 +147,7 @@ namespace OnlineShop.API.Controllers
             }
         }
 
-        // GET: api/<ProductController>
+        // GET: api/<Product>
         [HttpGet("Models/Getall")]
         public IActionResult Getall()
         {
@@ -157,6 +160,28 @@ namespace OnlineShop.API.Controllers
             else
             {
                 return NotFound();
+            }
+        }
+
+         // GET api/<Product>/Checkname/{prodName}
+        [HttpPost("Checkname")]
+        public IActionResult Checkname([FromBody]object prodName)
+        {
+            try
+            {
+                var productWithName = _unit.productRep.Find(x => x.Name == prodName.ToString());
+                if(!productWithName.Any())
+                {
+                    return Ok(1);
+                }
+                else
+                {
+                    return Ok(0);
+                }
+            }
+            catch
+            {
+                return StatusCode(500, "Internal Server Error: Can't Save data into DataBase");
             }
         }
     }

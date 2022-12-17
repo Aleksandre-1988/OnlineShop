@@ -5,6 +5,7 @@ namespace OnlineShop.Services.Contracts
 {
     public interface IProductService
     {
+        Task<ProductResponse> ProdNameExists(string prodName);
         Task<ProductResponse> GetById(int id);
         Task<ProductResponse> Take(int maxId);
         Task<ProductResponse> GetAll();
